@@ -2,17 +2,17 @@
 const products = new Map([
     ["Sunday stoneware mug", {
         price: 26,
-        image: "images/stoneware-mug.jpg",
+        image: "stoneware-mug.jpg",
         alt: "White stoneware mug on a simple pale surface"
     }],
     ["Everyday plate set", {
         price: 42,
-        image: "images/stacked-ceramics.jpg",
+        image: "stacked-ceramics.jpg",
         alt: "Stacked ceramic plates and bowls in soft blue and white"
     }],
     ["Bud vase pair", {
         price: 38,
-        image: "images/vase-styling.jpg",
+        image: "vase-styling.jpg",
         alt: "Pair of white ceramic vases arranged with flowering branches"
     }]
 ]);
