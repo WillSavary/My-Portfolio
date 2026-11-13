@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Search description, browser color, page title, and Juniper's stylesheet. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A sample landscaping website with garden design, outdoor living, and seasonal care ideas.">
+    <meta name="theme-color" content="#f2f3e8">
+    <title>Juniper Outdoor Co. | Get more out of your garden</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Identifies this as a portfolio concept and links back to the portfolio. -->
+    <div class="concept-bar">
+        <a href="../../index.html">William Savary / Portfolio</a>
+        <span>Portfolio sample · Juniper is a fictional business</span>
+    </div>
+    <header class="site-header">
+        <a class="brand" href="#home" aria-label="Juniper Outdoor Co. home">
+            <span class="brand__icon" aria-hidden="true">✳</span>
+            <span class="brand__name">juniper<span>.</span><small>OUTDOOR CO.</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="#services">What we do</a>
+            <a href="#spaces">Our spaces</a>
+            <a href="#approach">Our approach</a>
+            <a class="nav-cta" href="#contact">Let's talk</a>
+        </nav>
+    </header>
+
+    <main id="home">
+        <!-- Introduces the landscaping concept with a garden photo and service link. -->
+        <section class="hero">
+            <div class="hero__content">
+                <p class="eyebrow">Garden design &amp; outdoor living</p>
+                <h1>Make more of the space <span>outside.</span></h1>
+                <p>A good garden doesn't have to be complicated. It should suit your space, your seasons, and the way you like to spend time outdoors.</p>
+                <a class="button" href="#services">See what we can do <span aria-hidden="true">↓</span></a>
+            </div>
+            <figure class="landscape-art">
+                <img src="images/garden-path.jpg" alt="Fresh green lawn beside a modern garden fence" width="1000" height="667" fetchpriority="high">
+                <figcaption class="landscape-art__note">A little more green at home.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Shows the example services a landscaping team could offer. -->
+        <section class="section section--services" id="services" aria-labelledby="services-title">
+            <div class="section-heading">
+                <p class="eyebrow">Start where you are</p>
+                <h2 id="services-title">A garden that works for you.</h2>
+                <p>From a new planting plan to a place to sit outside, here's where a project could start.</p>
+            </div>
+            <div class="service-grid">
+                <article class="service-card">
+                    <span class="service-icon service-icon--plan" aria-hidden="true">01</span>
+                    <h3>Garden design</h3>
+                    <p>Choose plants and a layout that suit the light, soil, and time you have.</p>
+                    <a href="#approach">How we plan a garden <span aria-hidden="true">↗</span></a>
+                </article>
+                <article class="service-card">
+                    <span class="service-icon service-icon--build" aria-hidden="true">02</span>
+                    <h3>Outdoor living</h3>
+                    <p>Make space for a table, a few chairs, and the people you want around them.</p>
+                    <a href="#spaces">See garden photos <span aria-hidden="true">↗</span></a>
+                </article>
+                <article class="service-card">
+                    <span class="service-icon service-icon--care" aria-hidden="true">03</span>
+                    <h3>Garden care</h3>
+                    <p>Keep beds tidy and plants healthy as the weather and seasons change.</p>
+                    <a href="#contact">About this website <span aria-hidden="true">↗</span></a>
+                </article>
+            </div>
+        </section>
+
+        <!-- Photo gallery demonstrates outdoor project imagery; captions are samples. -->
+        <section class="section section--spaces" id="spaces" aria-labelledby="spaces-title">
+            <div class="section-heading section-heading--center">
+                <p class="eyebrow">Out in the garden</p>
+                <h2 id="spaces-title">A few things growing.</h2>
+            </div>
+            <div class="space-grid">
+                <article class="space-card">
+                    <img class="space-art" src="images/seedling-tray.jpg" alt="Young seedlings growing in a tray of soil" width="1000" height="667" loading="lazy">
+                    <div><span>Growing</span><h3>Starting with seedlings</h3></div>
+                </article>
+                <article class="space-card">
+                    <img class="space-art" src="images/planting-garden.jpg" alt="A hand trowel set in fresh soil beside a small planter" width="1000" height="667" loading="lazy">
+                    <div><span>Planting</span><h3>Getting the beds ready</h3></div>
+                </article>
+                <article class="space-card">
+                    <img class="space-art" src="images/garden-path.jpg" alt="A green lawn and planting beds beside a fence" width="1000" height="667" loading="lazy">
+                    <div><span>At home</span><h3>More green underfoot</h3></div>
+                </article>
+            </div>
+            <p class="sample-note">Sample landscaping photos. Juniper is a made-up business, not a real contractor.</p>
+        </section>
+
+        <!-- Describes a straightforward example process from planning to planting. -->
+        <section class="approach" id="approach" aria-labelledby="approach-title">
+            <div class="approach__intro">
+                <p class="eyebrow">The Juniper way</p>
+                <h2 id="approach-title">First, let's take a look.</h2>
+            </div>
+            <div class="approach__steps">
+                <p><span>01</span>Walk around and talk about how you'd like to use the yard.</p>
+                <p><span>02</span>Pick plants and materials that suit the space and your budget.</p>
+                <p><span>03</span>Set a schedule and get to planting.</p>
+            </div>
+        </section>
+
+        <!-- Makes clear this fictional business cannot schedule a real garden visit. -->
+        <section class="contact-section" id="contact" aria-labelledby="contact-title">
+            <p class="eyebrow">About this sample</p>
+            <h2 id="contact-title">A simple site for a hands-on business.</h2>
+            <p>Juniper Outdoor Co. is fictional, so this page can't arrange a garden visit. If you'd like a site for your business, I'd be happy to hear from you.</p>
+            <a class="button button--light" href="../../contact.html">Contact William <span aria-hidden="true">↗</span></a>
+        </section>
+    </main>
+
+    <!-- Discloses the sample business and credits the photo source. -->
+    <footer class="site-footer">
+        <a class="brand brand--footer" href="#home"><span class="brand__icon" aria-hidden="true">✳</span><span class="brand__name">juniper<span>.</span><small>OUTDOOR CO.</small></span></a>
+        <p>Juniper is a fictional business. Photos: <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash</a>.</p>
+        <a href="../../index.html">Back to William's portfolio</a>
+    </footer>
+</body>
+
+</html>

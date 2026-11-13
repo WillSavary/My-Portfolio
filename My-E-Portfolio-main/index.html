@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Browser metadata sets encoding, responsive sizing, tab text, and shared styles. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="I'm William Savary. Browse the websites I'm building as I learn frontend development.">
+    <meta name="theme-color" content="#070a10">
+    <title>William Savary | Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="home-page">
+    <!-- Lets keyboard users skip directly to the page's main content. -->
+    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- Shared brand and navigation links connect the portfolio pages. -->
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="William Savary, home">
+            <img class="brand__mark" src="imgs/william-savary-logo.svg" alt="" width="42" height="42">
+            <span class="brand__name">William Savary<span class="brand__caption">Web development portfolio</span></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a class="site-nav__link site-nav__link--current" href="index.html" aria-current="page">Home</a>
+            <a class="site-nav__link" href="work.html">My Work</a>
+            <a class="site-nav__link" href="Profile%20card.html">About</a>
+            <a class="site-nav__link" href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <main id="main">
+        <!-- Introduces William and offers direct routes to About, Work, and Contact. -->
+        <section class="hero content-width" aria-labelledby="hero-title">
+            <div class="hero__copy">
+                <p class="eyebrow">Frontend projects, one step at a time</p>
+                <h1 id="hero-title">Hi, I’m William.<br><span class="accent-text">I make things for the web.</span></h1>
+                <p class="hero__intro">I’m learning frontend development and turning each new skill into a site you can explore.</p>
+                <div class="button-row">
+                    <a class="button button--primary" href="Profile%20card.html">Get to know me <span aria-hidden="true">→</span></a>
+                    <a class="button button--quiet" href="work.html">View my work <span aria-hidden="true">→</span></a>
+                    <a class="button button--quiet" href="contact.html">Get in touch</a>
+                </div>
+            </div>
+            <div class="hero__visual" aria-hidden="true">
+                <div class="orbit orbit--one"></div>
+                <div class="orbit orbit--two"></div>
+                <img class="hero__monogram" src="imgs/william-savary-logo.svg" alt="William Savary logo" width="220" height="220">
+                <div class="hero__tag">William Savary</div>
+            </div>
+        </section>
+
+        <!-- Briefly explains what this portfolio is for and links to the About page. -->
+        <section class="section content-width" aria-labelledby="intro-title">
+            <div class="section-heading">
+                <p class="eyebrow">A little about this portfolio</p>
+                <h2 id="intro-title">A place to learn by doing.</h2>
+            </div>
+            <div class="intro-grid">
+                <p class="large-copy">I made this portfolio to practice, try ideas, and keep a record of what I’m building.</p>
+                <div class="intro-card">
+                    <span class="intro-card__number" aria-hidden="true">01</span>
+                    <h3>Learning as I go</h3>
+                    <p>I like the mix of design and code, especially getting the small-screen details right.</p>
+                    <a class="text-link" href="Profile%20card.html">More about me <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lists the current tools as visual skill cards. -->
+        <section class="section section--skills content-width" aria-labelledby="skills-title">
+            <div class="section-heading">
+                <p class="eyebrow">Tools I’m learning</p>
+                <h2 id="skills-title">My current toolkit</h2>
+            </div>
+            <ul class="skill-grid">
+                <li class="skill-card">
+                    <img src="imgs/HTML%20Logo.png" alt="" width="56" height="56">
+                    <span>HTML</span>
+                </li>
+                <li class="skill-card">
+                    <img src="imgs/CSS%20Logo.png" alt="" width="56" height="56">
+                    <span>CSS</span>
+                </li>
+                <li class="skill-card">
+                    <img src="imgs/JS%20Logo.png" alt="" width="56" height="56">
+                    <span>JavaScript</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Acts as a short preview that leads to the separate project gallery page. -->
+        <section class="section section--work content-width" aria-labelledby="work-title">
+            <div class="section-heading work-heading">
+                <div>
+                    <p class="eyebrow">A few things I’ve been building</p>
+                    <h2 id="work-title">My Work</h2>
+                </div>
+                <p>From a contractor site to a small online shop, these are practice projects for fictional businesses.</p>
+            </div>
+            <a class="button button--primary" href="work.html">Browse all projects <span aria-hidden="true">→</span></a>
+        </section>
+
+        <!-- Repeats a clear contact route near the bottom of the homepage. -->
+        <section class="contact-banner content-width" aria-labelledby="contact-banner-title">
+            <div>
+                <p class="eyebrow">Have a question or an idea?</p>
+                <h2 id="contact-banner-title">Let’s start a conversation.</h2>
+            </div>
+            <a class="button button--light" href="contact.html">Contact me <span aria-hidden="true">→</span></a>
+        </section>
+    </main>
+
+    <!-- Shared copyright and social links finish the page. -->
+    <footer class="site-footer">
+        <div class="site-footer__inner content-width">
+            <p class="site-footer__copyright">&copy; 2026 William Savary</p>
+            <p class="site-footer__note">Thanks for stopping by.</p>
+            <ul class="social-links" aria-label="Social profiles">
+                <li><a href="https://github.com/WillSavary" target="_blank" rel="noopener noreferrer" aria-label="William on GitHub">
+                    <img src="imgs/GitHubLogo.png" alt="" width="24" height="24">
+                </a></li>
+                <li><a href="https://www.linkedin.com/in/william-savary-364a6a2b7/" target="_blank" rel="noopener noreferrer" aria-label="William on LinkedIn">
+                    <img src="imgs/LinkedinLogo.png" alt="" width="24" height="24">
+                </a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>

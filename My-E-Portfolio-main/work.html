@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Page metadata and styling for the standalone project gallery. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Browse William Savary's sample websites for fictional businesses, from home renovation to online retail.">
+    <meta name="theme-color" content="#070a10">
+    <title>My Work | William Savary</title>
+    <link rel="stylesheet" href="work.css">
+</head>
+
+<body class="work-page">
+    <!-- Keyboard shortcut and consistent site navigation. -->
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="William Savary, home">
+            <img class="brand__mark" src="imgs/william-savary-logo.svg" alt="" width="42" height="42">
+            <span class="brand__name">William Savary<span class="brand__caption">Web development portfolio</span></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a class="site-nav__link" href="index.html">Home</a>
+            <a class="site-nav__link site-nav__link--current" href="work.html" aria-current="page">My Work</a>
+            <a class="site-nav__link" href="Profile%20card.html">About</a>
+            <a class="site-nav__link" href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <main id="main" class="content-width work-main">
+        <!-- Explains what this gallery contains before the project cards. -->
+        <section class="work-intro" aria-labelledby="work-title">
+            <p class="eyebrow">A few things I’ve been building</p>
+            <h1 id="work-title">My Work</h1>
+            <p>Browse a few website concepts I’ve made while learning frontend development. Each one has its own look and feel, and you can open it to explore.</p>
+        </section>
+
+        <!-- Each card previews a fictional client concept and opens its browseable demo. -->
+        <section class="section section--work" aria-label="Website projects">
+            <div class="work-grid">
+                <article class="work-card">
+                    <a class="work-card__preview work-card__preview--northline" href="work/northline/index.html" aria-label="Open Northline Build and Renovate website concept">
+                        <img class="work-card__image" src="work/northline/images/renovated-home.jpg" alt="" width="1000" height="667" loading="lazy">
+                        <span class="preview-brand">NORTHLINE<small>BUILD + RENOVATE</small></span>
+                        <span class="preview-caption">A better home for the way you live.</span>
+                    </a>
+                    <div class="work-card__details">
+                        <p class="work-card__type">Contractor · Home renovation</p>
+                        <h2>Northline Build &amp; Renovate</h2>
+                        <p>A clear, photo-led site for a home renovation business.</p>
+                        <a class="text-link" href="work/northline/index.html">Explore website <span aria-hidden="true">↗</span></a>
+                    </div>
+                </article>
+
+                <article class="work-card">
+                    <a class="work-card__preview work-card__preview--juniper" href="work/juniper/index.html" aria-label="Open Juniper Outdoor website concept">
+                        <img class="work-card__image" src="work/juniper/images/garden-path.jpg" alt="" width="1000" height="667" loading="lazy">
+                        <span class="preview-brand">juniper<small>OUTDOOR CO.</small></span>
+                        <span class="preview-caption">A yard you want to spend time in.</span>
+                    </a>
+                    <div class="work-card__details">
+                        <p class="work-card__type">Contractor · Landscaping</p>
+                        <h2>Juniper Outdoor Co.</h2>
+                        <p>A garden-first site for a landscaping and outdoor living team.</p>
+                        <a class="text-link" href="work/juniper/index.html">Explore website <span aria-hidden="true">↗</span></a>
+                    </div>
+                </article>
+
+                <article class="work-card">
+                    <a class="work-card__preview work-card__preview--morrow" href="work/morrow/index.html" aria-label="Open Morrow Goods online shop concept">
+                        <img class="work-card__image" src="work/morrow/images/vase-styling.jpg" alt="" width="1000" height="667" loading="lazy">
+                        <span class="preview-brand">morrow<small>GOODS FOR HOME</small></span>
+                        <span class="preview-caption">Useful things, picked with care.</span>
+                    </a>
+                    <div class="work-card__details">
+                        <p class="work-card__type">Online business · Home goods</p>
+                        <h2>Morrow Goods</h2>
+                        <p>A small homewares shop with product photos, a sample cart, and a checkout preview.</p>
+                        <a class="text-link" href="work/morrow/index.html">Explore website <span aria-hidden="true">↗</span></a>
+                    </div>
+                </article>
+            </div>
+            <p class="work-disclaimer">These are practice projects for fictional businesses, not client work. The shop uses sample prices.</p>
+        </section>
+
+        <!-- Provides a path from the project gallery to the Contact page. -->
+        <section class="contact-banner work-contact" aria-labelledby="work-contact-title">
+            <div>
+                <p class="eyebrow">Have a project in mind?</p>
+                <h2 id="work-contact-title">Let’s talk about it.</h2>
+            </div>
+            <a class="button button--light" href="contact.html">Get in touch <span aria-hidden="true">→</span></a>
+        </section>
+    </main>
+
+    <!-- Shared footer with copyright and social-profile links. -->
+    <footer class="site-footer">
+        <div class="site-footer__inner content-width">
+            <p class="site-footer__copyright">&copy; 2026 William Savary</p>
+            <p class="site-footer__note">Thanks for stopping by.</p>
+            <ul class="social-links" aria-label="Social profiles">
+                <li><a href="https://github.com/WillSavary" target="_blank" rel="noopener noreferrer" aria-label="William on GitHub">
+                    <img src="imgs/GitHubLogo.png" alt="" width="24" height="24">
+                </a></li>
+                <li><a href="https://www.linkedin.com/in/william-savary-364a6a2b7/" target="_blank" rel="noopener noreferrer" aria-label="William on LinkedIn">
+                    <img src="imgs/LinkedinLogo.png" alt="" width="24" height="24">
+                </a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>

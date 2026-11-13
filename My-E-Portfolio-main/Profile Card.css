@@ -1,0 +1,72 @@
+@import url("style.css");
+
+/* Gives the About page a centered reading area beneath the shared header. */
+.about-main {
+    padding-block: 5rem 6rem;
+}
+
+.about-hero {
+    display: grid;
+    grid-template-columns: 0.72fr 1.28fr;
+    align-items: center;
+    gap: clamp(2rem, 7vw, 6rem);
+    padding-block: 2rem 5rem;
+}
+
+/* Keeps the supplied portrait circular and paired with the About copy. */
+.profile-avatar {
+    display: block;
+    width: min(100%, 340px);
+    aspect-ratio: 1;
+    justify-self: center;
+    border: 1px solid rgba(79, 157, 255, 0.4);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 14px rgba(79, 157, 255, 0.035), 0 0 0 28px rgba(79, 157, 255, 0.025);
+}
+
+.about-copy {
+    max-width: 650px;
+}
+
+.about-copy h1 {
+    margin-bottom: 1.2rem;
+    font-size: clamp(2.5rem, 5.2vw, 4.2rem);
+}
+
+.about-copy > p:not(.eyebrow) {
+    color: var(--color-muted);
+}
+
+.about-copy .about-lead {
+    color: var(--color-text) !important;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    line-height: 1.55;
+}
+
+.about-copy .button {
+    margin-top: 0.7rem;
+}
+
+.about-tools {
+    padding-top: 3.5rem;
+    border-top: 1px solid var(--color-line);
+}
+
+@media (max-width: 760px) {
+    /* Stack the portrait and text so both stay comfortable on smaller screens. */
+    .about-main {
+        padding-block: 3rem 4rem;
+    }
+
+    .about-hero {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        padding-block: 1rem 3.5rem;
+    }
+
+    .profile-avatar {
+        width: min(58vw, 250px);
+    }
+}

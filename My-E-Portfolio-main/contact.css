@@ -1,0 +1,112 @@
+@import url("style.css");
+
+/* Centers the contact content vertically on larger screens. */
+.contact-main {
+    min-height: calc(100vh - 176px);
+    padding-block: clamp(4rem, 10vw, 8rem);
+}
+
+.contact-intro {
+    max-width: 650px;
+    margin-bottom: 2.5rem;
+}
+
+.contact-intro h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(3.2rem, 8vw, 6rem);
+}
+
+.contact-intro > p:last-child {
+    max-width: 520px;
+    margin-bottom: 0;
+    color: var(--color-muted);
+    font-size: 1.1rem;
+}
+
+/* Makes email and phone each a large, keyboard-accessible contact link. */
+.contact-options {
+    display: grid;
+    max-width: 760px;
+    gap: 0.85rem;
+}
+
+.contact-option {
+    display: flex;
+    min-height: 100px;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.2rem 1.4rem;
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    background: var(--color-surface);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.contact-option:hover {
+    transform: translateY(-2px);
+    border-color: rgba(79, 157, 255, 0.6);
+    background: var(--color-surface-raised);
+}
+
+.contact-option__icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--color-accent-dark);
+    color: var(--color-accent);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.contact-option__body {
+    display: grid;
+    min-width: 0;
+    gap: 0.15rem;
+}
+
+.contact-option__label {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+}
+
+.contact-option__value {
+    overflow-wrap: anywhere;
+    font-family: var(--font-display);
+    font-size: clamp(0.95rem, 2.6vw, 1.12rem);
+    font-weight: 700;
+}
+
+.contact-option__arrow {
+    margin-left: auto;
+    color: var(--color-accent);
+    font-size: 1.25rem;
+}
+
+.contact-note {
+    margin-top: 1.7rem;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+}
+
+.contact-note a {
+    color: var(--color-accent);
+    text-underline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+    /* Reduce padding and let contact details wrap on narrow screens. */
+    .contact-main {
+        min-height: auto;
+        padding-block: 4rem 5rem;
+    }
+
+    .contact-option {
+        gap: 0.85rem;
+        padding-inline: 1rem;
+    }
+}

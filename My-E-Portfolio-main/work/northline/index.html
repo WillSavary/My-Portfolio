@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Search description, browser color, page title, and Northline's stylesheet. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Northline is a sample home renovation website, with project photography, services, and a simple project process.">
+    <meta name="theme-color" content="#f3efe6">
+    <title>Northline Build &amp; Renovate | Make home work better</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Identifies this as a portfolio concept and links back to the main portfolio. -->
+    <div class="concept-bar">
+        <a href="../../index.html">William Savary / Portfolio</a>
+        <span>Portfolio sample · Northline is a fictional business</span>
+    </div>
+    <header class="site-header">
+        <a class="wordmark" href="#home" aria-label="Northline Build and Renovate home">
+            <span class="wordmark__symbol" aria-hidden="true">N</span>
+            <span>NORTHLINE<small>BUILD + RENOVATE</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="#services">Services</a>
+            <a href="#projects">Projects</a>
+            <a href="#process">Our approach</a>
+            <a class="nav-cta" href="#contact">Start a conversation <span aria-hidden="true">↗</span></a>
+        </nav>
+    </header>
+
+    <main id="home">
+        <!-- Contractor introduction with a primary gallery link and renovation photo. -->
+        <section class="hero">
+            <div class="hero__copy">
+                <p class="eyebrow">Home renovation, without the guesswork</p>
+                <h1>Make home work<br><em>a little better.</em></h1>
+                <p class="hero__intro">Kitchens, bathrooms, and the rooms in between. Start with what isn't working, then make a plan that fits your home.</p>
+                <a class="button button--dark" href="#projects">See the project gallery <span aria-hidden="true">↗</span></a>
+            </div>
+            <figure class="hero-art">
+                <img src="images/renovated-home.jpg" alt="Renovated two-story home with a timber addition and pool" width="1000" height="667" fetchpriority="high">
+                <figcaption class="hero-art__label">A home with room to grow.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Summarizes the example services this fictional contractor offers. -->
+        <section class="section section--services" id="services" aria-labelledby="services-title">
+            <div class="section-heading">
+                <p class="eyebrow">What we do</p>
+                <h2 id="services-title">The rooms you use every day.</h2>
+                <p>A few common renovation projects, with the basics laid out up front.</p>
+            </div>
+            <div class="service-grid">
+                <article class="service-card">
+                    <span class="service-card__number">01</span>
+                    <h3>Kitchens</h3>
+                    <p>More prep space, better storage, and a layout that makes sense for your household.</p>
+                    <span class="service-card__arrow" aria-hidden="true">↗</span>
+                </article>
+                <article class="service-card">
+                    <span class="service-card__number">02</span>
+                    <h3>Bathrooms</h3>
+                    <p>Replace the dated fixtures, fix the awkward bits, and make the room easier to use.</p>
+                    <span class="service-card__arrow" aria-hidden="true">↗</span>
+                </article>
+                <article class="service-card">
+                    <span class="service-card__number">03</span>
+                    <h3>Whole-home</h3>
+                    <p>Update several rooms together so the changes feel like they belong to the same home.</p>
+                    <span class="service-card__arrow" aria-hidden="true">↗</span>
+                </article>
+            </div>
+        </section>
+
+        <!-- Uses sample photos to demonstrate how project work could be presented. -->
+        <section class="section section--projects" id="projects" aria-labelledby="projects-title">
+            <div class="section-heading section-heading--row">
+                <div>
+                    <p class="eyebrow">A few ideas</p>
+                    <h2 id="projects-title">A look at the details.</h2>
+                </div>
+                    <p>These are sample photos for the concept site, not Northline client projects.</p>
+            </div>
+            <div class="project-grid">
+                    <figure class="project-card">
+                        <img class="project-art" src="images/renovated-interior.jpg" alt="Open living room with a timber feature wall, kitchen, and dining area" width="1000" height="667" loading="lazy">
+                        <figcaption class="project-card__caption"><h3>Open-plan living</h3><span>Sample photo</span></figcaption>
+                    </figure>
+                    <figure class="project-card">
+                        <img class="project-art" src="images/sunlit-living-room.jpg" alt="Sunlit living room with large windows and indoor plants" width="1000" height="667" loading="lazy">
+                        <figcaption class="project-card__caption"><h3>Letting the light in</h3><span>Sample photo</span></figcaption>
+                    </figure>
+            </div>
+        </section>
+
+        <!-- Outlines a simple three-step process for a potential renovation. -->
+        <section class="section section--process" id="process" aria-labelledby="process-title">
+            <div class="section-heading">
+                <p class="eyebrow">The Northline approach</p>
+                <h2 id="process-title">What happens first?</h2>
+            </div>
+            <ol class="process-list">
+                <li><span>01</span><div><h3>Talk it through</h3><p>Walk the space and make a list of what's working, what's not, and what matters most.</p></div></li>
+                <li><span>02</span><div><h3>Set the scope</h3><p>Agree on a layout, materials, timing, and budget before work begins.</p></div></li>
+                <li><span>03</span><div><h3>Get to work</h3><p>Keep you updated as the project moves along and decisions come up.</p></div></li>
+            </ol>
+        </section>
+
+        <!-- Clarifies that requests are not accepted by this fictional business. -->
+        <section class="contact-section" id="contact" aria-labelledby="contact-title">
+            <p class="eyebrow">This is a sample website</p>
+            <h2 id="contact-title">Need a site for your own business?</h2>
+            <p>Northline isn't a real contractor and this page doesn't take estimate requests. If you're looking for a website like this, you can get in touch with me.</p>
+            <a class="button button--light" href="../../contact.html">Contact William <span aria-hidden="true">↗</span></a>
+        </section>
+    </main>
+
+    <!-- Discloses the sample business and credits the photo source. -->
+    <footer class="site-footer">
+        <a class="wordmark wordmark--footer" href="#home"><span class="wordmark__symbol" aria-hidden="true">N</span><span>NORTHLINE<small>BUILD + RENOVATE</small></span></a>
+        <p>Northline is a fictional business. Photos: <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash</a>.</p>
+        <a href="../../index.html">Back to William's portfolio</a>
+    </footer>
+</body>
+
+</html>

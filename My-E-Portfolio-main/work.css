@@ -1,0 +1,49 @@
+@import url("style.css");
+
+/* Introductory copy and project list for the dedicated My Work page. */
+.work-main {
+    padding-block: 4rem 1rem;
+}
+
+.work-intro {
+    max-width: 760px;
+    padding-block: 2rem 1rem;
+}
+
+.work-intro h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(3rem, 7vw, 5.25rem);
+}
+
+.work-intro > p:last-child {
+    max-width: 650px;
+    margin-bottom: 0;
+    color: var(--color-muted);
+    font-size: 1.1rem;
+}
+
+.work-main .section--work {
+    padding-top: 2.5rem;
+}
+
+/* Make project titles match the shared card hierarchy. */
+.work-card__details h2 {
+    margin-bottom: 0.55rem;
+    font-size: 1.12rem;
+    letter-spacing: 0;
+}
+
+.work-contact {
+    margin-top: 3rem;
+}
+
+@media (max-width: 760px) {
+    /* Tighten the introduction spacing on mobile. */
+    .work-main {
+        padding-top: 3rem;
+    }
+
+    .work-intro {
+        padding-top: 1rem;
+    }
+}

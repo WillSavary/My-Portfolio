@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Page metadata and storefront styles; defer loads cart behavior after parsing. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Browse a small collection of home goods in this sample shop. Preview the bag and checkout flow; no orders or payments are processed.">
+    <meta name="theme-color" content="#f6f1e8">
+    <title>Morrow Goods | Good things for home</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="store.js" defer></script>
+</head>
+
+<body>
+    <!-- Marks this as a fictional portfolio shop rather than a real seller. -->
+    <div class="concept-bar">
+        <a href="../../index.html">William Savary / Portfolio</a>
+        <span>Portfolio sample · fictional shop · no real orders</span>
+    </div>
+    <header class="site-header">
+        <a class="wordmark" href="index.html" aria-label="Morrow Goods home">morrow<span>.</span></a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="#shop">Shop</a>
+            <a href="#story">Our story</a>
+            <a class="bag-link" href="cart.html" aria-label="View shopping bag">
+                Bag <span data-bag-count aria-label="0 items">0</span>
+            </a>
+        </nav>
+    </header>
+
+    <main id="home">
+        <!-- Storefront introduction with a local product photo and shop link. -->
+        <section class="hero">
+            <div class="hero__copy">
+                <p class="eyebrow">A small homewares shop</p>
+                <h1>Good things<br><em>for home.</em></h1>
+                <p>The mug you reach for every morning. A vase that catches the light. Useful pieces that feel good to live with.</p>
+                <a class="button" href="#shop">See what’s in the shop <span aria-hidden="true">↓</span></a>
+            </div>
+            <figure class="hero-art">
+                <img src="images/vase-styling.jpg" alt="Simple white ceramic vases with flowering branches on a wooden stand" width="1000" height="667" fetchpriority="high">
+                <figcaption class="hero-art__caption">A few favorite things.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Sample product cards provide buttons and prices for the demo cart. -->
+        <section class="shop-section" id="shop" aria-labelledby="shop-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">The Morrow shelf</p>
+                    <h2 id="shop-title">Things we use every day.</h2>
+                </div>
+                <p>These are sample items and prices. The shop is here to show how browsing could work.</p>
+            </div>
+            <div class="product-grid">
+                <article class="product-card">
+                    <img class="product-art" src="images/stoneware-mug.jpg" alt="White stoneware mug on a simple pale surface" width="1000" height="667" loading="lazy">
+                    <div class="product-info">
+                        <div><h3>Sunday stoneware mug</h3><p>A good shape for coffee or tea</p></div>
+                        <span class="price">$26</span>
+                        <button class="add-button" type="button" data-product="Sunday stoneware mug" data-price="26">
+                            Add to bag <span aria-hidden="true">+</span>
+                        </button>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <img class="product-art" src="images/stacked-ceramics.jpg" alt="Stacked ceramic plates and bowls in soft blue and white" width="1000" height="667" loading="lazy">
+                    <div class="product-info">
+                        <div><h3>Everyday plate set</h3><p>Simple plates for the daily table</p></div>
+                        <span class="price">$42</span>
+                        <button class="add-button" type="button" data-product="Everyday plate set" data-price="42">
+                            Add to bag <span aria-hidden="true">+</span>
+                        </button>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <img class="product-art" src="images/vase-styling.jpg" alt="Pair of white ceramic vases arranged with flowering branches" width="1000" height="667" loading="lazy">
+                    <div class="product-info">
+                        <div><h3>Bud vase pair</h3><p>Two small vases for a favorite stem</p></div>
+                        <span class="price">$38</span>
+                        <button class="add-button" type="button" data-product="Bud vase pair" data-price="38">
+                            Add to bag <span aria-hidden="true">+</span>
+                        </button>
+                    </div>
+                </article>
+            </div>
+            <p class="cart-status" id="store-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- Explains the made-up store and clarifies that products are not sold. -->
+        <section class="story-section" id="story" aria-labelledby="story-title">
+            <div class="story-art"><img src="images/stacked-ceramics.jpg" alt="Blue and white plates stacked on a wooden shelf" width="1000" height="667" loading="lazy"></div>
+            <div class="story-copy">
+                <p class="eyebrow">About this sample shop</p>
+                <h2 id="story-title">Buy less. Love it longer.</h2>
+                <p>Morrow Goods is a made-up shop for this portfolio. The photos and prices are examples, and nothing here can be ordered.</p>
+                <a class="text-link" href="#shop">Back to the products <span aria-hidden="true">↑</span></a>
+            </div>
+        </section>
+
+        <!-- A live cart preview leads to the dedicated bag and demo checkout pages. -->
+        <section class="bag-section" aria-labelledby="bag-title">
+            <div class="bag-preview">
+                <div>
+                    <p class="eyebrow">Your Morrow bag</p>
+                    <h2 id="bag-title">A few things for home.</h2>
+                    <p class="bag-disclaimer">
+                        Sample prices only. The checkout is a preview and won’t collect information or take payment.
+                    </p>
+                </div>
+                <div class="bag-preview__summary">
+                    <p><span>Items</span><strong data-bag-count>0</strong></p>
+                    <p><span>Sample subtotal</span><strong data-bag-subtotal>$0</strong></p>
+                    <a class="button" href="cart.html">View your bag <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Discloses the fictional shop and credits the sample photos. -->
+    <footer class="site-footer">
+        <a class="wordmark" href="index.html">morrow<span>.</span></a>
+        <p>Morrow is a fictional shop. Photos: <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash</a>.</p>
+        <a href="../../index.html">Back to William's portfolio</a>
+    </footer>
+</body>
+
+</html>
