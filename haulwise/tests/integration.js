@@ -4,8 +4,8 @@ const assert = require("node:assert/strict");
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
 const net = require("node:net");
-const os = require("node:os");
 const path = require("node:path");
+const { createTripCsv } = require("../trip-export");
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -23,73 +23,25 @@ async function getFreePort() {
 (async () => {
     const port = await getFreePort();
     const origin = `http://localhost:${port}`;
-    const dataDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "haulwise-integration-"));
-    const serverPath = path.resolve(__dirname, "..", "server.js");
-    const serverOptions = {
+    const server = spawn(process.execPath, [path.resolve(__dirname, "..", "server.js")], {
         cwd: path.resolve(__dirname, ".."),
-        env: {
-            ...process.env,
-            PORT: String(port),
-            APP_BASE_URL: origin,
-            ADMIN_BOOTSTRAP_TOKEN: "integration-test-token-that-is-long-enough",
-            HAULWISE_DATA_DIR: dataDirectory,
-            STRIPE_SECRET_KEY: "",
-            STRIPE_FLEET_PRICE_ID: "",
-            STRIPE_WEBHOOK_SECRET: ""
-        },
+        env: { ...process.env, PORT: String(port) },
         stdio: ["ignore", "ignore", "pipe"]
-    };
-    let server;
+    });
     let serverErrors = "";
+    server.stderr.setEncoding("utf8");
+    server.stderr.on("data", (chunk) => { serverErrors += chunk; });
 
-    function startServer() {
-        server = spawn(process.execPath, [serverPath], serverOptions);
-        server.stderr.setEncoding("utf8");
-        server.stderr.on("data", (chunk) => { serverErrors += chunk; });
-    }
-
-    async function stopServer() {
-        if (!server || server.exitCode !== null) return;
-        const stopped = new Promise((resolve) => server.once("exit", resolve));
-        server.kill("SIGTERM");
-        await stopped;
-    }
-
-    async function request(urlPath, { method = "GET", body, cookie } = {}) {
-        const headers = {};
-        if (method !== "GET" && method !== "HEAD") headers.Origin = origin;
-        if (body !== undefined) {
-            headers["Content-Type"] = "application/json";
-        }
-        if (cookie) headers.Cookie = cookie;
-        const response = await fetch(`${origin}${urlPath}`, {
-            method,
-            headers,
-            body: body === undefined ? undefined : JSON.stringify(body)
-        });
-        const text = response.status === 204 ? "" : await response.text();
-        let result = {};
-        if (text) {
-            try {
-                result = JSON.parse(text);
-            } catch {
-                result = text;
-            }
-        }
-        return {
-            status: response.status,
-            body: result,
-            cookie: response.headers.get("set-cookie")?.split(";")[0] || ""
-        };
+    async function request(urlPath) {
+        const response = await fetch(`${origin}${urlPath}`);
+        return { status: response.status, body: await response.text() };
     }
 
     async function waitForServer() {
         for (let attempt = 0; attempt < 50; attempt += 1) {
-            if (server.exitCode !== null) {
-                throw new Error(`Test server exited unexpectedly. ${serverErrors}`);
-            }
+            if (server.exitCode !== null) throw new Error(`Test server exited unexpectedly. ${serverErrors}`);
             try {
-                const response = await request("/api/admin/setup-status");
+                const response = await request("/haulwise/");
                 if (response.status === 200) return;
             } catch {
                 await wait(100);
@@ -99,27 +51,14 @@ async function getFreePort() {
     }
 
     try {
-        startServer();
         await waitForServer();
 
-        const setup = await request("/api/admin/setup-status");
-        assert.equal(setup.body.configured, false);
-        assert.equal(setup.body.setupEnabled, true);
-
-        const accountPage = await request("/haulwise/account.html");
-        assert.equal(accountPage.status, 200);
-        const privatePage = await request("/haulwise/api.js");
-        assert.equal(privatePage.status, 404);
-
         const navigationPages = [
+            "/",
+            "/work.html",
             "/haulwise/",
             "/haulwise/index.html",
-            "/haulwise/demo.html",
-            "/haulwise/account.html",
-            "/haulwise/subscriptions.html",
-            "/haulwise/checkout.html",
-            "/haulwise/admin-setup.html",
-            "/haulwise/admin.html"
+            "/haulwise/demo.html"
         ];
         const navigationDocuments = new Map();
         for (const page of navigationPages) {
@@ -127,20 +66,17 @@ async function getFreePort() {
             assert.equal(result.status, 200, `Navigation page is unavailable: ${page}`);
             navigationDocuments.set(page, result.body);
         }
+
         for (const [page, html] of navigationDocuments) {
             const links = html.matchAll(/<a\b[^>]*\bhref=(["'])(.*?)\1/gi);
             for (const [, , href] of links) {
                 const target = new URL(href, `${origin}${page}`);
                 if (!["http:", "https:"].includes(target.protocol) || target.origin !== origin) continue;
 
-                const targetPath = `${target.pathname}${target.search}`;
-                let targetHtml = navigationDocuments.get(target.pathname);
-                if (!targetHtml) {
-                    const targetPage = await request(targetPath);
-                    assert.equal(targetPage.status, 200, `Broken navigation link: ${page} -> ${href}`);
-                    if (typeof targetPage.body === "string") targetHtml = targetPage.body;
-                }
-                if (target.hash && targetHtml) {
+                const targetPage = await request(`${target.pathname}${target.search}`);
+                assert.equal(targetPage.status, 200, `Broken navigation link: ${page} -> ${href}`);
+                if (target.hash) {
+                    const targetHtml = navigationDocuments.get(target.pathname) || targetPage.body;
                     const fragment = decodeURIComponent(target.hash.slice(1));
                     assert.ok(
                         targetHtml.includes(`id="${fragment}"`) || targetHtml.includes(`id='${fragment}'`),
@@ -150,208 +86,56 @@ async function getFreePort() {
             }
         }
 
-        const ownerSetup = await request("/api/admin/bootstrap", {
-            method: "POST",
-            body: {
-                setupToken: "integration-test-token-that-is-long-enough",
-                username: "test-owner",
-                email: "owner@example.test",
-                password: "owner-password-for-integration"
-            }
-        });
-        assert.equal(ownerSetup.status, 201);
-        assert.ok(ownerSetup.cookie);
-        assert.equal(Object.hasOwn(ownerSetup.body.user, "password_hash"), false);
-        const ownerCookie = ownerSetup.cookie;
-
-        const registrationBody = {
-            accountType: "company",
-            companyName: "Example Hauling",
-            businessEmail: "dispatch@example.test",
-            businessKind: "For-hire motor carrier",
-            dotNumber: "1234567",
-            name: "Test Driver",
-            email: "driver@example.test",
-            password: "driver-password-for-integration"
-        };
-        const registration = await request("/api/auth/register", {
-            method: "POST",
-            body: registrationBody
-        });
-        assert.equal(registration.status, 202);
-        assert.match(registration.body.message, /pending owner approval/i);
-
-        const pendingLogin = await request("/api/auth/login", {
-            method: "POST",
-            body: { identifier: registrationBody.email, password: registrationBody.password }
-        });
-        assert.equal(pendingLogin.status, 403);
-
-        const independentAccount = {
-            accountType: "owner",
-            name: "Test Owner-Operator",
-            email: "independent@example.test",
-            password: "independent-password-for-integration"
-        };
-        const independentRegistration = await request("/api/auth/register", {
-            method: "POST",
-            body: independentAccount
-        });
-        assert.equal(independentRegistration.status, 202);
-
-        const carrier = await request("/api/admin/companies", {
-            method: "POST",
-            body: { name: "Invitation Test Carrier" },
-            cookie: ownerCookie
-        });
-        assert.equal(carrier.status, 201);
-        assert.ok(carrier.body.inviteCode);
-        const driverAccount = {
-            accountType: "driver",
-            inviteCode: carrier.body.inviteCode,
-            name: "Invited Test Driver",
-            email: "invited-driver@example.test",
-            password: "invited-driver-password-for-integration"
-        };
-        const driverRegistration = await request("/api/auth/register", {
-            method: "POST",
-            body: driverAccount
-        });
-        assert.equal(driverRegistration.status, 202);
-
-        const users = await request("/api/admin/records/users", { cookie: ownerCookie });
-        const newUser = users.body.records.find((user) => user.email === registrationBody.email);
-        const independentUser = users.body.records.find((user) => user.email === independentAccount.email);
-        const driverUser = users.body.records.find((user) => user.email === driverAccount.email);
-        assert.ok(newUser);
-        assert.ok(independentUser);
-        assert.ok(driverUser);
-        assert.equal(newUser.status, "pending");
-        assert.equal(independentUser.status, "pending");
-        assert.equal(driverUser.status, "pending");
-
-        const companies = await request("/api/admin/records/companies", { cookie: ownerCookie });
-        const newCompany = companies.body.records.find((company) => company.name === registrationBody.companyName);
-        const independentCompany = companies.body.records.find((company) => company.name === `${independentAccount.name} - Independent`);
-        assert.ok(newCompany);
-        assert.ok(independentCompany);
-        assert.equal(newCompany.status, "pending");
-        assert.equal(independentCompany.status, "pending");
-
-        for (const company of [newCompany, independentCompany]) {
-            const approval = await request(`/api/admin/companies/${company.id}/status`, {
-                method: "PATCH",
-                body: { status: "active" },
-                cookie: ownerCookie
-            });
-            assert.equal(approval.status, 200);
-        }
-        for (const user of [newUser, independentUser, driverUser]) {
-            const approval = await request(`/api/admin/users/${user.id}/status`, {
-                method: "PATCH",
-                body: { status: "active" },
-                cookie: ownerCookie
-            });
-            assert.equal(approval.status, 200);
+        for (const removedPage of [
+            "/haulwise/account.html",
+            "/haulwise/admin.html",
+            "/haulwise/admin-setup.html",
+            "/haulwise/checkout.html",
+            "/haulwise/subscriptions.html",
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/account/data"
+        ]) {
+            assert.equal((await request(removedPage)).status, 404, `Removed feature still responds: ${removedPage}`);
         }
 
-        const duplicateRegistration = await request("/api/auth/register", {
-            method: "POST",
-            body: registrationBody
-        });
-        assert.equal(duplicateRegistration.status, 409);
+        const demo = navigationDocuments.get("/haulwise/demo.html");
+        assert.doesNotMatch(demo, /account\.html|sign.?up|log.?in|payroll|team &amp; roles|DOT \/ ELD/i);
+        const appJs = fs.readFileSync(path.resolve(__dirname, "..", "app.js"), "utf8");
+        assert.match(appJs, /function downloadTripCsv\(trip\)/);
+        assert.match(appJs, /createTripCsv\(trip, data\.truck\)/);
+        assert.match(appJs, /data\.trips = \[\]/);
+        assert.doesNotMatch(appJs, /fetch\(|\/api\/|data\.trips\.push/);
 
-        const login = await request("/api/auth/login", {
-            method: "POST",
-            body: { identifier: registrationBody.email, password: registrationBody.password }
-        });
-        assert.equal(login.status, 200);
-        assert.ok(login.cookie);
-        assert.equal(login.body.user.email, registrationBody.email);
-        assert.equal(Object.hasOwn(login.body.user, "password_hash"), false);
-        const userCookie = login.cookie;
+        const tripFile = createTripCsv({
+            date: "2026-01-15T12:00:00.000Z",
+            company: "Demo, Freight",
+            reference: "=1+1",
+            origin: "Columbus, OH",
+            originAddress: "1 Start St",
+            destination: "Cleveland, OH",
+            address: "2 End St",
+            entry: "Use gate \"A\"",
+            start: 100,
+            end: 250
+        }, { name: "Test Truck", unit: "9", plate: "" });
+        assert.equal(tripFile.filename, "haulwise-trip-2026-01-15-1-1.csv");
+        assert.ok(tripFile.contents.startsWith("\uFEFF\"Date\",\"Company / load\""));
+        assert.match(tripFile.contents, /"Demo, Freight"/);
+        assert.match(tripFile.contents, /"Use gate ""A"""/);
+        assert.match(tripFile.contents, /"150"/);
+        assert.match(tripFile.contents, /"'=1\+1"/);
 
-        const otherAccountCookies = [];
-        for (const account of [independentAccount, driverAccount]) {
-            const accountLogin = await request("/api/auth/login", {
-                method: "POST",
-                body: { identifier: account.email, password: account.password }
-            });
-            assert.equal(accountLogin.status, 200);
-            assert.equal(accountLogin.body.user.email, account.email);
-            assert.ok(accountLogin.cookie);
-            otherAccountCookies.push(accountLogin.cookie);
-        }
+        const databaseFile = path.resolve(__dirname, "..", ".haulwise-data", "haulwise.sqlite");
+        assert.equal(fs.existsSync(databaseFile), false, "The public server must not create a trip database.");
 
-        const authStatus = await request("/api/auth/status", { cookie: userCookie });
-        assert.equal(authStatus.body.authenticated, true);
-        assert.equal(authStatus.body.user.name, registrationBody.name);
-
-        const accountData = {
-            truck: { name: "Freightliner Cascadia", unit: "104", plate: "ABC123" },
-            trips: [{
-                id: "integration-trip",
-                company: "Example Customer",
-                reference: "LOAD-42",
-                origin: "Columbus, OH",
-                originAddress: "1 Origin Road",
-                destination: "Cleveland, OH",
-                address: "2 Destination Road",
-                entry: "Use north gate",
-                start: 100,
-                end: 250,
-                date: "2026-01-15T12:00:00.000Z"
-            }],
-            facilities: [{
-                id: "integration-facility",
-                name: "Example Distribution Center",
-                country: "US",
-                address: "2 Destination Road",
-                notes: "North gate",
-                verifiedAt: "2026-01-15T12:00:00.000Z"
-            }]
-        };
-        const saveData = await request("/api/account/data", {
-            method: "PUT",
-            body: { data: accountData },
-            cookie: userCookie
-        });
-        assert.equal(saveData.status, 200);
-
-        const storedData = await request("/api/account/data", { cookie: userCookie });
-        assert.equal(storedData.status, 200);
-        assert.equal(storedData.body.data.truck.unit, "104");
-        assert.equal(storedData.body.data.trips[0].reference, "LOAD-42");
-        assert.equal(storedData.body.data.facilities[0].name, "Example Distribution Center");
-        for (const cookie of otherAccountCookies) {
-            const isolatedData = await request("/api/account/data", { cookie });
-            assert.equal(isolatedData.status, 200);
-            assert.equal(isolatedData.body.data.trips.length, 0);
-            assert.equal(isolatedData.body.data.facilities.length, 0);
-        }
-
-        const databaseFile = path.join(dataDirectory, "haulwise.sqlite");
-        assert.equal(fs.existsSync(databaseFile), true);
-
-        await stopServer();
-        startServer();
-        await waitForServer();
-        const persistedData = await request("/api/account/data", { cookie: userCookie });
-        assert.equal(persistedData.status, 200);
-        assert.equal(persistedData.body.data.trips[0].reference, "LOAD-42");
-
-        const logout = await request("/api/auth/logout", {
-            method: "POST",
-            cookie: userCookie
-        });
-        assert.equal(logout.status, 204);
-        const protectedData = await request("/api/account/data", { cookie: userCookie });
-        assert.equal(protectedData.status, 401);
-
-        console.log("Account navigation, registration, approval, sign-in, and SQLite persistence checks passed.");
+        console.log("Free public pages, CSV exports, privacy, and no-database checks passed.");
     } finally {
-        await stopServer();
-        fs.rmSync(dataDirectory, { recursive: true, force: true });
+        if (server.exitCode === null) {
+            const stopped = new Promise((resolve) => server.once("exit", resolve));
+            server.kill("SIGTERM");
+            await stopped;
+        }
     }
 })().catch((error) => {
     console.error(error);
