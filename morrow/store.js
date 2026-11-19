@@ -25,16 +25,27 @@ const money = new Intl.NumberFormat("en-US", {
 });
 
 function loadBag() {
-    const savedBag = localStorage.getItem(storageKey);
+    let savedBag;
+    try {
+        savedBag = localStorage.getItem(storageKey);
+    } catch {
+        return new Map();
+    }
 
     if (!savedBag) {
         return new Map();
     }
-
-    const savedItems = JSON.parse(savedBag);
+    let savedItems;
+    try {
+        savedItems = JSON.parse(savedBag);
+    } catch {
+        localStorage.removeItem(storageKey);
+        return new Map();
+    }
 
     if (!savedItems || Array.isArray(savedItems) || typeof savedItems !== "object") {
-        throw new Error("The saved demo bag has an invalid format.");
+        localStorage.removeItem(storageKey);
+        return new Map();
     }
 
     return new Map(Object.entries(savedItems).map(([name, quantity]) => {

@@ -47,6 +47,6 @@ Haulwise shares or copies start and destination details for the driver's chosen 
 
 ## Stripe status
 
-The server-side checkout and webhook routes intentionally fail closed. They do not create a payment or subscription. Real checkout remains disabled until authentication-linked customer records, durable subscription entitlements, verified webhook persistence, a configured Stripe Price ID, and a public HTTPS deployment have been reviewed and tested.
+Checkout and signed webhook entitlement persistence are implemented. Checkout fails closed until `STRIPE_SECRET_KEY`, `STRIPE_FLEET_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `APP_BASE_URL`, and a public HTTPS endpoint are configured.
 
-Never put Stripe API or webhook secrets in browser code or commit them. Configure payout accounts privately in Stripe's dashboard. The proposed price shown on the plans page is not a live offer.
+Set a recurring Fleet Price ID from the Stripe Dashboard. Register `/api/billing/webhook` as a signed webhook and subscribe to subscription lifecycle events. Never put API keys or webhook secrets in browser code or commit them.

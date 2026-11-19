@@ -42,7 +42,7 @@ checkoutNext.addEventListener("click", async (event) => {
             body: JSON.stringify({ plan: "fleet" })
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "Secure checkout is not available yet.");
+        if (!response.ok) throw new Error(result.error || "Secure checkout is unavailable.");
         if (typeof result.url !== "string" || new URL(result.url).origin !== "https://checkout.stripe.com") {
             throw new Error("The billing service returned an invalid checkout destination.");
         }

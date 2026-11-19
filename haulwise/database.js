@@ -20,6 +20,69 @@ db.pragma("foreign_keys = ON");
 db.pragma("busy_timeout = 5000");
 
 db.exec(`
+    CREATE TABLE IF NOT EXISTS subscriptions (
+        id TEXT PRIMARY KEY,
+        company_id TEXT REFERENCES companies(id) ON DELETE CASCADE,
+        stripe_customer_id TEXT NOT NULL,
+        stripe_subscription_id TEXT NOT NULL UNIQUE,
+        plan TEXT NOT NULL DEFAULT 'fleet',
+        status TEXT NOT NULL DEFAULT 'incomplete',
+        current_period_end INTEGER,
+        cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS team_invitations (
+        id TEXT PRIMARY KEY,
+        company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        email TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('company_admin', 'driver')),
+        code_hash TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'revoked', 'expired')),
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS truck_assignments (
+        truck_id TEXT NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        assigned_at TEXT NOT NULL,
+        released_at TEXT,
+        PRIMARY KEY (truck_id, user_id, assigned_at)
+    );
+
+    CREATE TABLE IF NOT EXISTS payroll_periods (
+        id TEXT PRIMARY KEY,
+        company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'paid')),
+        created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS payroll_entries (
+        id TEXT PRIMARY KEY,
+        period_id TEXT NOT NULL REFERENCES payroll_periods(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        miles REAL NOT NULL DEFAULT 0,
+        rate REAL NOT NULL DEFAULT 0,
+        amount REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'paid')),
+        created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS eld_connections (
+        id TEXT PRIMARY KEY,
+        company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL DEFAULT 'provider-neutral',
+        external_account_id TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'disconnected' CHECK (status IN ('disconnected', 'connected', 'syncing', 'error')),
+        last_sync_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS companies (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,

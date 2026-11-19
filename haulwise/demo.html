@@ -22,9 +22,10 @@
                 <button class="nav-link is-active" type="button" data-view="overview"><span aria-hidden="true">◫</span> Overview</button>
                 <button class="nav-link" type="button" data-view="trips"><span aria-hidden="true">↗</span> Trips &amp; mileage</button>
                 <button class="nav-link" type="button" data-view="fleet"><span aria-hidden="true">▰</span> My truck</button>
-                <button class="nav-link locked-link" type="button" data-locked="Payroll"><span aria-hidden="true">▤</span> Payroll <span class="lock-tag">PRO</span></button>
-                <button class="nav-link locked-link" type="button" data-locked="Team &amp; roles"><span aria-hidden="true">♧</span> Team &amp; roles <span class="lock-tag">PRO</span></button>
-                <button class="nav-link locked-link" type="button" data-locked="Reports"><span aria-hidden="true">▥</span> Reports <span class="lock-tag">PRO</span></button>
+                <button class="nav-link" type="button" data-view="team"><span aria-hidden="true">♧</span> Team &amp; roles</button>
+                <button class="nav-link" type="button" data-view="payroll"><span aria-hidden="true">▤</span> Payroll</button>
+                <button class="nav-link" type="button" data-view="reports"><span aria-hidden="true">▥</span> Reports</button>
+                <button class="nav-link" type="button" data-view="eld"><span aria-hidden="true">⌁</span> DOT / ELD</button>
             </nav>
             <div class="sidebar-bottom">
                 <div class="upgrade-card">
@@ -175,6 +176,54 @@
                     <span class="lock-illustration" aria-hidden="true">▣</span>
                     <div><p class="eyebrow">BUSINESS PLAN</p><h2>Managing a fleet?</h2><p>Company-owned vehicle lists, assignment history, maintenance workflows, and team access are business features—not part of the free driver workspace.</p>                    <a class="inline-link" href="subscriptions.html">See business plans <span aria-hidden="true">→</span></a></div>
                 </article>
+            </section>
+
+            <section class="view-panel" id="view-team" aria-labelledby="team-heading" hidden>
+                <div class="section-title"><div><p class="eyebrow">FLEET WORKSPACE</p><h2 id="team-heading">Team &amp; roles</h2></div></div>
+                <section class="panel"><div class="panel-heading"><div><p class="eyebrow">INVITE A DRIVER</p><h2>Team access</h2></div></div>
+                    <form class="form-grid" id="team-invite-form">
+                        <label>Email<input name="email" type="email" required maxlength="254"></label>
+                        <label>Role<select name="role"><option value="driver">Driver</option><option value="company_admin">Company administrator</option></select></label>
+                        <div class="form-actions field-wide"><button class="button button--lime" type="submit">Create invite</button></div>
+                    </form>
+                    <output id="team-invite-output" class="account-sync-status"></output>
+                    <div id="team-members" class="facility-list"></div>
+                </section>
+            </section>
+
+            <section class="view-panel" id="view-payroll" aria-labelledby="payroll-heading" hidden>
+                <div class="section-title"><div><p class="eyebrow">FLEET WORKSPACE</p><h2 id="payroll-heading">Payroll</h2></div></div>
+                <section class="panel">
+                    <form class="form-grid" id="payroll-period-form">
+                        <label>Period name<input name="name" required maxlength="100" placeholder="November payroll"></label>
+                        <label>Start date<input name="startDate" type="date" required></label>
+                        <label>End date<input name="endDate" type="date" required></label>
+                        <div class="form-actions field-wide"><button class="button button--lime" type="submit">Create period</button></div>
+                    </form>
+                    <div id="payroll-periods" class="facility-list"></div>
+                    <form class="form-grid" id="payroll-entry-form">
+                        <label>Payroll period<select name="periodId" id="payroll-period-select" required></select></label>
+                        <label>Driver<select name="userId" id="payroll-driver-select" required></select></label>
+                        <label>Miles<input name="miles" type="number" min="0" step="0.1" required></label>
+                        <label>Rate per mile<input name="rate" type="number" min="0" step="0.01" required></label>
+                        <div class="form-actions field-wide"><button class="button button--lime" type="submit">Add payroll entry</button></div>
+                    </form>
+                </section>
+            </section>
+
+            <section class="view-panel" id="view-reports" aria-labelledby="reports-heading" hidden>
+                <div class="section-title"><div><p class="eyebrow">FLEET WORKSPACE</p><h2 id="reports-heading">Fleet reports</h2></div></div>
+                <div class="metric-grid" id="fleet-report-metrics"></div>
+            </section>
+
+            <section class="view-panel" id="view-eld" aria-labelledby="eld-heading" hidden>
+                <div class="section-title"><div><p class="eyebrow">PROVIDER-NEUTRAL IMPORT</p><h2 id="eld-heading">DOT / ELD data</h2></div></div>
+                <section class="panel">
+                    <p class="muted-copy">Import trip data exported from any supported ELD provider. Use a provider-neutral JSON list, including externalId, customer, origin, destination, and odometer fields.</p>
+                    <label>ELD JSON<input id="eld-json" type="file" accept=".json,application/json"></label>
+                    <div class="form-actions"><button class="button button--lime" type="button" id="eld-import">Import trips</button></div>
+                    <p id="eld-status" class="route-status" role="status"></p>
+                </section>
             </section>
 
             <footer class="app-footer"><span>Haulwise · Driver demo</span><span>Not a carrier dispatch or ELD service</span><a href="../work.html">Portfolio</a></footer>

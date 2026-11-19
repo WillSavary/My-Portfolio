@@ -20,14 +20,25 @@ const defaultData = {
 };
 
 function readData() {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    let saved;
+    try {
+        saved = localStorage.getItem(STORAGE_KEY);
+    } catch {
+        return structuredClone(defaultData);
+    }
     if (saved === null) {
         return structuredClone(defaultData);
     }
-
-    const data = JSON.parse(saved);
+    let data;
+    try {
+        data = JSON.parse(saved);
+    } catch {
+        localStorage.removeItem(STORAGE_KEY);
+        return structuredClone(defaultData);
+    }
     if (!data || !Array.isArray(data.trips) || typeof data.truck !== "object") {
-        throw new Error("Saved Haulwise demo data is invalid. Clear this site's browser storage to restart the demo.");
+        localStorage.removeItem(STORAGE_KEY);
+        return structuredClone(defaultData);
     }
     if (!Array.isArray(data.facilities)) data.facilities = [];
     return data;
@@ -46,7 +57,11 @@ function saveData() {
     if (accountUser) {
         queueAccountSync();
     } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch {
+            showStatus("Browser storage is unavailable. Changes will remain only until this page closes.", true);
+        }
     }
 }
 
@@ -134,6 +149,108 @@ async function signOutAccount() {
         window.location.assign("account.html");
     } catch (error) {
         showStatus(error.message, true);
+    }
+
+    async function fleetJson(url, options = {}) {
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+            ...options
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Fleet operation could not be completed.");
+        return result;
+    }
+
+    async function loadFleetViews() {
+        try {
+            const status = await fleetJson("/api/fleet/status");
+            renderTeamMembers(status.team);
+            renderPayrollDrivers(status.team);
+            await loadFleetReports();
+            await loadPayrollPeriods();
+        } catch (error) {
+            showStatus(error.message, true);
+        }
+
+        function renderTeamMembers(team) {
+            const list = document.querySelector("#team-members");
+            list.replaceChildren();
+            if (!team.length) {
+                const empty = document.createElement("p");
+                empty.className = "empty-state";
+                empty.textContent = "No team members are attached to this workspace yet.";
+                list.append(empty);
+                return;
+            }
+            team.forEach((member) => {
+                const row = document.createElement("article");
+                row.className = "facility-row";
+                row.innerHTML = `<div class="facility-details"><strong>${member.name}</strong><span>${member.email} · ${member.role} · ${member.status}</span></div>`;
+                list.append(row);
+            });
+        }
+
+        function renderPayrollDrivers(team) {
+            const select = document.querySelector("#payroll-driver-select");
+            select.replaceChildren(new Option("Select a driver", ""));
+            team.filter((member) => member.role === "driver" && member.status === "active").forEach((member) => {
+                select.add(new Option(member.name, member.id));
+            });
+        }
+    }
+
+    async function loadFleetReports() {
+        const result = await fleetJson("/api/fleet/reports");
+        const metrics = document.querySelector("#fleet-report-metrics");
+        metrics.replaceChildren();
+        [
+            ["Total miles", result.miles],
+            ["Trips", result.tripCount],
+            ["Trucks", result.activeTrucks],
+            ["Active drivers", result.activeDrivers]
+        ].forEach(([label, value]) => {
+            const card = document.createElement("article");
+            card.className = "metric-card";
+            const name = document.createElement("span");
+            name.className = "metric-label";
+            name.textContent = label;
+            const amount = document.createElement("strong");
+            amount.textContent = formatNumber(value);
+            card.append(name, amount);
+            metrics.append(card);
+        });
+    }
+
+    async function loadPayrollPeriods() {
+        const result = await fleetJson("/api/fleet/payroll/periods");
+        const list = document.querySelector("#payroll-periods");
+        const select = document.querySelector("#payroll-period-select");
+        const selected = select.value;
+        select.replaceChildren(new Option("Select a payroll period", ""));
+        result.periods.forEach((period) => select.add(new Option(`${period.name} · ${period.start_date} to ${period.end_date}`, period.id)));
+        if (result.periods.some((period) => period.id === selected)) select.value = selected;
+        list.replaceChildren();
+        if (!result.periods.length) {
+            const empty = document.createElement("p");
+            empty.className = "empty-state";
+            empty.textContent = "No payroll periods have been created.";
+            list.append(empty);
+            return;
+        }
+        result.periods.forEach((period) => {
+            const row = document.createElement("article");
+            row.className = "facility-row";
+            const detail = document.createElement("div");
+            detail.className = "facility-details";
+            detail.innerHTML = `<strong>${period.name}</strong><span>${period.start_date} to ${period.end_date} · ${period.entry_count} entries · $${Number(period.total_amount).toFixed(2)} · ${period.status}</span>`;
+            const link = document.createElement("a");
+            link.className = "text-button";
+            link.href = `/api/fleet/payroll/periods/${encodeURIComponent(period.id)}/export`;
+            link.textContent = "Export CSV";
+            row.append(detail, link);
+            list.append(row);
+        });
     }
 }
 
@@ -455,7 +572,10 @@ async function copyRoute() {
 }
 
 document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => showView(button.dataset.view));
+    button.addEventListener("click", () => {
+        showView(button.dataset.view);
+        if (["team", "payroll", "reports", "eld"].includes(button.dataset.view)) loadFleetViews();
+    });
 });
 
 document.querySelector("#open-route-planner").addEventListener("click", () => {
@@ -706,6 +826,85 @@ document.querySelector("#truck-form").addEventListener("submit", (event) => {
     saveData();
     renderTrips();
     showStatus("Truck details saved to this browser's local demo.", false);
+});
+
+document.querySelector("#team-invite-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    try {
+        const result = await fleetJson("/api/fleet/invitations", {
+            method: "POST",
+            body: JSON.stringify({ email: values.get("email"), role: values.get("role") })
+        });
+        event.currentTarget.reset();
+        document.querySelector("#team-invite-output").textContent = `Invite created for ${result.email}. Share the invitation code privately; it is shown once. Code: ${result.invitationCode}`;
+    } catch (error) {
+        showStatus(error.message, true);
+    }
+});
+
+document.querySelector("#payroll-period-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    try {
+        await fleetJson("/api/fleet/payroll/periods", {
+            method: "POST",
+            body: JSON.stringify({ name: values.get("name"), startDate: values.get("startDate"), endDate: values.get("endDate") })
+        });
+        event.currentTarget.reset();
+        await loadPayrollPeriods();
+    } catch (error) {
+        showStatus(error.message, true);
+    }
+});
+
+document.querySelector("#payroll-entry-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const periodId = values.get("periodId");
+    if (!periodId) {
+        showStatus("Select a payroll period first.", true);
+        return;
+    }
+    try {
+        await fleetJson(`/api/fleet/payroll/periods/${encodeURIComponent(periodId)}/entries`, {
+            method: "POST",
+            body: JSON.stringify({
+                userId: values.get("userId"),
+                miles: values.get("miles"),
+                rate: values.get("rate")
+            })
+        });
+        event.currentTarget.reset();
+        await loadPayrollPeriods();
+        showStatus("Payroll entry added.", false);
+    } catch (error) {
+        showStatus(error.message, true);
+    }
+});
+
+document.querySelector("#eld-import").addEventListener("click", async () => {
+    const fileInput = document.querySelector("#eld-json");
+    const status = document.querySelector("#eld-status");
+    if (!fileInput.files?.length) {
+        status.textContent = "Choose a provider-neutral JSON export first.";
+        status.classList.add("is-error");
+        return;
+    }
+    try {
+        const trips = JSON.parse(await fileInput.files[0].text());
+        if (!Array.isArray(trips)) throw new Error("The JSON root must be an array of trips.");
+        const result = await fleetJson("/api/fleet/eld/import", {
+            method: "POST",
+            body: JSON.stringify({ trips })
+        });
+        status.textContent = `Imported ${result.imported} provider-neutral trips.`;
+        status.classList.remove("is-error");
+        fileInput.value = "";
+    } catch (error) {
+        status.textContent = error.message;
+        status.classList.add("is-error");
+    }
 });
 
 const today = new Date();

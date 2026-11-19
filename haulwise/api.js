@@ -4,6 +4,7 @@ const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 const express = require("express");
 const rateLimit = require("express-rate-limit");
+const Stripe = require("stripe");
 const { db } = require("./database");
 
 const router = express.Router();
@@ -14,6 +15,74 @@ const allowedRecordKinds = new Set(["users", "companies", "trucks", "trips", "fa
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: true, legacyHeaders: false });
 const setupLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
 const accountWriteLimiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+
+router.post("/billing/checkout", accountWriteLimiter, requireActiveUser, async (request, response) => {
+    if (!stripe || !process.env.STRIPE_FLEET_PRICE_ID || !process.env.APP_BASE_URL) {
+        response.status(503).json({ error: "Stripe checkout is not configured. Provide the private server credentials and reload." });
+        return;
+    }
+    if (request.body.plan !== "fleet" || !request.user.company_id) {
+        response.status(400).json({ error: "A Fleet workspace is required." });
+        return;
+    }
+    try {
+        const baseUrl = new URL(process.env.APP_BASE_URL).origin;
+        const session = await stripe.checkout.sessions.create({
+            mode: "subscription",
+            line_items: [{ price: process.env.STRIPE_FLEET_PRICE_ID, quantity: 1 }],
+            customer_email: request.user.email,
+            client_reference_id: request.user.company_id,
+            metadata: { companyId: request.user.company_id, plan: "fleet" },
+            subscription_data: { metadata: { companyId: request.user.company_id, plan: "fleet" } },
+            success_url: `${baseUrl}/haulwise/checkout.html?checkout=complete`,
+            cancel_url: `${baseUrl}/haulwise/checkout.html?plan=fleet&checkout=cancelled`
+        });
+        response.json({ url: session.url });
+    } catch (error) {
+        console.error("Stripe Checkout session creation failed:", error.message);
+        response.status(502).json({ error: "Could not create secure checkout. No payment was made." });
+    }
+});
+
+router.get("/billing/status", requireActiveUser, (request, response) => {
+    const subscription = db.prepare(`
+        SELECT plan, status, current_period_end, cancel_at_period_end, updated_at
+        FROM subscriptions WHERE company_id = ? ORDER BY updated_at DESC LIMIT 1
+    `).get(request.user.company_id);
+    response.json({ subscription: subscription || null });
+});
+
+function requireCompanyAdmin(request, response, next) {
+    const user = findSessionUser(request);
+    if (!user || !["owner", "company_admin"].includes(user.role) || user.status !== "active") {
+        response.status(403).json({ error: "Company administrator access is required." });
+        return;
+    }
+    if (user.role !== "owner" && (!user.company_id || user.company_status !== "active")) {
+        response.status(403).json({ error: "This company workspace is pending approval or suspended." });
+        return;
+    }
+    request.user = user;
+    next();
+}
+
+function requireFleetSubscription(request, response, next) {
+    if (request.user.role === "owner") {
+        next();
+        return;
+    }
+    const subscription = db.prepare(`
+        SELECT status FROM subscriptions
+        WHERE company_id = ? AND status IN ('active', 'trialing')
+        ORDER BY updated_at DESC LIMIT 1
+    `).get(request.user.company_id);
+    if (!subscription) {
+        response.status(402).json({ error: "An active Fleet subscription is required for this workspace." });
+        return;
+    }
+    next();
+}
 
 router.use(express.json({ limit: "2mb" }));
 router.use((request, response, next) => {
@@ -212,6 +281,169 @@ router.delete("/account/facilities/:id", accountWriteLimiter, requireActiveUser,
     response.sendStatus(204);
 });
 
+router.get("/fleet/status", requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const companyId = request.user.role === "owner" ? null : request.user.company_id;
+    response.json({
+        companyId,
+        role: request.user.role,
+        team: companyId ? db.prepare("SELECT id, name, email, role, status FROM users WHERE company_id = ? ORDER BY name").all(companyId) : [],
+        trucks: companyId ? db.prepare("SELECT * FROM trucks WHERE company_id = ? ORDER BY updated_at DESC").all(companyId) : [],
+        trips: companyId ? db.prepare("SELECT * FROM trips WHERE company_id = ? ORDER BY created_at DESC LIMIT 500").all(companyId) : []
+    });
+});
+
+router.post("/fleet/invitations", accountWriteLimiter, requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const email = cleanEmail(request.body.email);
+    const role = request.body.role === "company_admin" ? "company_admin" : "driver";
+    if (!email) {
+        response.status(400).json({ error: "Enter a valid team member email." });
+        return;
+    }
+    const code = crypto.randomBytes(18).toString("base64url");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    db.prepare(`
+        INSERT INTO team_invitations (id, company_id, email, role, code_hash, status, expires_at, created_at)
+        VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+    `).run(crypto.randomUUID(), request.user.company_id, email, role, hashToken(code), expiresAt, new Date().toISOString());
+    recordAudit({ actorUserId: request.user.id, companyId: request.user.company_id, action: "team.invited", entityType: "team_invitation", entityId: email });
+    response.status(201).json({ email, role, invitationCode: code });
+});
+
+router.post("/fleet/trucks", accountWriteLimiter, requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const name = cleanText(request.body.name, 100);
+    if (!name) {
+        response.status(400).json({ error: "Enter a truck name." });
+        return;
+    }
+    const truck = {
+        id: crypto.randomUUID(),
+        user_id: request.user.id,
+        company_id: request.user.company_id,
+        name,
+        unit: cleanText(request.body.unit, 30),
+        plate: cleanText(request.body.plate, 20),
+        updated_at: new Date().toISOString()
+    };
+    db.prepare("INSERT INTO trucks (id, user_id, company_id, name, unit, plate, updated_at) VALUES (@id, @user_id, @company_id, @name, @unit, @plate, @updated_at)").run(truck);
+    recordAudit({ actorUserId: request.user.id, companyId: request.user.company_id, action: "truck.created", entityType: "truck", entityId: truck.id });
+    response.status(201).json({ truck });
+});
+
+router.post("/fleet/trucks/:id/assign", accountWriteLimiter, requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const truck = db.prepare("SELECT id FROM trucks WHERE id = ? AND company_id = ?").get(request.params.id, request.user.company_id);
+    const member = db.prepare("SELECT id FROM users WHERE id = ? AND company_id = ? AND role = 'driver' AND status = 'active'").get(request.body.userId, request.user.company_id);
+    if (!truck || !member) {
+        response.status(404).json({ error: "Truck or active driver was not found in this company." });
+        return;
+    }
+    db.prepare("INSERT INTO truck_assignments (truck_id, user_id, assigned_at, released_at) VALUES (?, ?, ?, NULL)").run(truck.id, member.id, new Date().toISOString());
+    db.prepare("UPDATE trucks SET user_id = ?, updated_at = ? WHERE id = ?").run(member.id, new Date().toISOString(), truck.id);
+    recordAudit({ actorUserId: request.user.id, companyId: request.user.company_id, action: "truck.assigned", entityType: "truck", entityId: truck.id });
+    response.json({ assigned: true });
+});
+
+router.get("/fleet/reports", requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const companyId = request.user.company_id;
+    const miles = db.prepare("SELECT COALESCE(SUM(MAX(odometer_end - odometer_start, 0)), 0) AS miles FROM trips WHERE company_id = ?").get(companyId).miles;
+    const tripCount = db.prepare("SELECT COUNT(*) AS count FROM trips WHERE company_id = ?").get(companyId).count;
+    const activeTrucks = db.prepare("SELECT COUNT(*) AS count FROM trucks WHERE company_id = ?").get(companyId).count;
+    const activeDrivers = db.prepare("SELECT COUNT(*) AS count FROM users WHERE company_id = ? AND role = 'driver' AND status = 'active'").get(companyId).count;
+    response.json({ miles, tripCount, activeTrucks, activeDrivers });
+});
+
+router.post("/fleet/payroll/periods", accountWriteLimiter, requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const name = cleanText(request.body.name, 100);
+    const startDate = cleanText(request.body.startDate, 10);
+    const endDate = cleanText(request.body.endDate, 10);
+    if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < startDate) {
+        response.status(400).json({ error: "Enter a payroll name and valid start/end dates." });
+        return;
+    }
+    const period = { id: crypto.randomUUID(), company_id: request.user.company_id, name, start_date: startDate, end_date: endDate, status: "draft", created_at: new Date().toISOString() };
+    db.prepare("INSERT INTO payroll_periods (id, company_id, name, start_date, end_date, status, created_at) VALUES (@id, @company_id, @name, @start_date, @end_date, @status, @created_at)").run(period);
+    response.status(201).json({ period });
+});
+
+router.post("/fleet/payroll/periods/:id/entries", accountWriteLimiter, requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const period = db.prepare("SELECT * FROM payroll_periods WHERE id = ? AND company_id = ?").get(request.params.id, request.user.company_id);
+    if (!period) {
+        response.status(404).json({ error: "Payroll period was not found." });
+        return;
+    }
+    const userId = cleanText(request.body.userId, 80);
+    const miles = Number(request.body.miles);
+    const rate = Number(request.body.rate);
+    if (!db.prepare("SELECT 1 FROM users WHERE id = ? AND company_id = ?").get(userId, request.user.company_id) || !Number.isFinite(miles) || miles < 0 || !Number.isFinite(rate) || rate < 0) {
+        response.status(400).json({ error: "Choose a company driver and enter valid miles and rate." });
+        return;
+    }
+    const entry = { id: crypto.randomUUID(), period_id: period.id, user_id: userId, miles, rate, amount: miles * rate, status: "pending", created_at: new Date().toISOString() };
+    db.prepare("INSERT INTO payroll_entries (id, period_id, user_id, miles, rate, amount, status, created_at) VALUES (@id, @period_id, @user_id, @miles, @rate, @amount, @status, @created_at)").run(entry);
+    response.status(201).json({ entry });
+});
+
+router.get("/fleet/payroll/periods", requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const periods = db.prepare(`
+        SELECT p.*, COUNT(e.id) AS entry_count, COALESCE(SUM(e.amount), 0) AS total_amount
+        FROM payroll_periods p LEFT JOIN payroll_entries e ON e.period_id = p.id
+        WHERE p.company_id = ? GROUP BY p.id ORDER BY p.start_date DESC
+    `).all(request.user.company_id);
+    response.json({ periods });
+});
+
+router.get("/fleet/payroll/periods/:id/export", requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const period = db.prepare("SELECT * FROM payroll_periods WHERE id = ? AND company_id = ?").get(request.params.id, request.user.company_id);
+    if (!period) {
+        response.status(404).json({ error: "Payroll period was not found." });
+        return;
+    }
+    const entries = db.prepare(`
+        SELECT u.name, u.email, e.miles, e.rate, e.amount, e.status
+        FROM payroll_entries e JOIN users u ON u.id = e.user_id
+        WHERE e.period_id = ? ORDER BY u.name
+    `).all(period.id);
+    const lines = ["Driver,Email,Miles,Rate,Amount,Status"];
+    for (const entry of entries) lines.push([entry.name, entry.email, entry.miles, entry.rate, entry.amount, entry.status].map(csvValue).join(","));
+    response.setHeader("Content-Type", "text/csv");
+    response.setHeader("Content-Disposition", `attachment; filename="haulwise-payroll-${period.start_date}-${period.end_date}.csv"`);
+    response.send(lines.join("\n"));
+});
+
+router.post("/fleet/eld/import", accountWriteLimiter, requireCompanyAdmin, requireFleetSubscription, (request, response) => {
+    const trips = Array.isArray(request.body.trips) ? request.body.trips : [];
+    if (trips.length > 1000) {
+        response.status(400).json({ error: "ELD imports are limited to 1,000 trips." });
+        return;
+    }
+    let imported = 0;
+    const write = db.transaction(() => {
+        for (const trip of trips) {
+            const externalId = cleanText(trip.externalId, 80);
+            if (!externalId) continue;
+            const start = Number(trip.startOdometer);
+            const end = Number(trip.endOdometer);
+            if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) continue;
+            db.prepare(`
+                INSERT INTO trips (id, user_id, company_id, customer, reference, origin, origin_address, destination,
+                    destination_address, entry_notes, odometer_start, odometer_end, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET odometer_start=excluded.odometer_start, odometer_end=excluded.odometer_end
+                WHERE trips.user_id=excluded.user_id
+            `).run(crypto.randomUUID(), request.user.id, request.user.company_id, cleanText(trip.customer, 100),
+                externalId, cleanText(trip.origin, 160), cleanText(trip.originAddress, 240),
+                cleanText(trip.destination, 160), cleanText(trip.destinationAddress, 240),
+                cleanText(trip.entryNotes, 240), start, end, validDate(trip.date));
+            imported += 1;
+        }
+        db.prepare(`
+            INSERT INTO eld_connections (id, company_id, provider, external_account_id, status, last_sync_at, created_at, updated_at)
+            VALUES (?, ?, 'provider-neutral', '', 'connected', ?, ?, ?)
+        `).run(crypto.randomUUID(), request.user.company_id, new Date().toISOString(), new Date().toISOString(), new Date().toISOString());
+    });
+    write();
+    response.json({ imported });
+});
+
 router.get("/admin/setup-status", (request, response) => {
     response.json({
         configured: db.prepare("SELECT 1 FROM users WHERE role = 'owner' LIMIT 1").get() !== undefined,
@@ -237,8 +469,8 @@ router.post("/admin/bootstrap", setupLimiter, async (request, response) => {
     const username = cleanUsername(request.body.username);
     const email = cleanEmail(request.body.email);
     const password = typeof request.body.password === "string" ? request.body.password : "";
-    if (!username || !email || password.length < 10 || password.length > 256) {
-        response.status(400).json({ error: "Choose a username, valid email, and unique password of at least 10 characters." });
+    if (!username || !email || password.length < 12 || password.length > 256) {
+        response.status(400).json({ error: "Choose a username, valid email, and unique password of at least 12 characters." });
         return;
     }
     const salt = crypto.randomBytes(16).toString("hex");

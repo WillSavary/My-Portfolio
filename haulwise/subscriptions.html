@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f3f5ef">
-    <meta name="description" content="Compare Haulwise Driver and Fleet plans, see proposed demo pricing, and find the right tools for you.">
+    <meta name="description" content="Compare Haulwise Driver and Fleet plans and configure the tools for your operation.">
     <title>Plans &amp; pricing | Haulwise</title>
     <link rel="stylesheet" href="app.css">
 </head>
@@ -23,7 +23,7 @@
             <p class="eyebrow">STRAIGHTFORWARD PLANS</p>
             <h1>Start with what you need.<br><span>Grow when you’re ready.</span></h1>
             <p>Use the Driver workspace for your own records, or bring your operation together with Fleet.</p>
-            <span class="proposed-label"><span aria-hidden="true">i</span> Proposed demo pricing · not an active offer</span>
+            <span class="proposed-label"><span aria-hidden="true">i</span> Fleet subscription pricing · configured through Stripe</span>
         </section>
         <section class="plan-cards" aria-label="Available Haulwise plans">
             <article class="plan-card">
@@ -42,13 +42,13 @@
                 <h2>Fleet</h2>
                 <p class="plan-description">Shared operations tools for a team that’s ready to grow.</p>
                 <p class="plan-price-large"><strong>$49</strong><span>/ month</span></p>
-                <p class="plan-billing">Proposed base price · final pricing may vary</p>
+                <p class="plan-billing">Monthly recurring subscription</p>
                 <a class="button button--lime button--full" href="checkout.html?plan=fleet">Choose Fleet <span aria-hidden="true">→</span></a>
                 <div class="plan-includes"><strong>Everything in Driver, plus:</strong><ul><li>Driver, team, and role management</li><li>Shared truck and trip records</li><li>Fleet reports and payroll tools</li><li>Business onboarding support</li><li>Company verification workflow</li></ul></div>
                 <p class="plan-fit"><strong>Best for:</strong> Small carriers and growing teams that need shared visibility across drivers and trucks.</p>
             </article>
         </section>
-        <p class="pricing-disclaimer">Pricing and features on this concept page are illustrative only. Haulwise subscriptions, account services, and secure payment processing are not currently available. No charge will be made.</p>
+        <p class="pricing-disclaimer">Fleet checkout uses Stripe after secure server configuration. The current local deployment will clearly report if Stripe credentials or the subscription Price ID are missing.</p>
         <section class="comparison-section" aria-labelledby="comparison-title">
             <div class="comparison-heading"><div><p class="eyebrow">SIDE-BY-SIDE</p><h2 id="comparison-title">Compare the details</h2></div><p>Choose the amount of support and shared access that fits your work.</p></div>
             <div class="comparison-table-wrap">
@@ -60,14 +60,14 @@
                         <tr><th scope="row">Multiple drivers and roles</th><td><span class="not-included">—</span></td><td><span class="included">Included</span></td></tr>
                         <tr><th scope="row">Fleet reports and payroll tools</th><td><span class="not-included">—</span></td><td><span class="included">Included</span></td></tr>
                         <tr><th scope="row">Company onboarding</th><td><span class="not-included">—</span></td><td><span class="included">Included</span></td></tr>
-                        <tr><th scope="row">Payment processing</th><td><span class="not-included">Not available</span></td><td><span class="not-included">Not available</span></td></tr>
+                        <tr><th scope="row">Payment processing</th><td><span class="not-included">Not required</span></td><td><span class="included">Stripe subscription</span></td></tr>
                     </tbody>
                 </table>
             </div>
-            <p class="comparison-footnote">*Fleet price shown is a proposed starting price, not a live subscription offer.</p>
+            <p class="comparison-footnote">*Fleet price is $49 unless the configured Stripe recurring price differs.</p>
         </section>
         <section class="plans-help"><div><p class="eyebrow">STILL DECIDING?</p><h2>Take a look before you choose.</h2><p>Try the sample driver workspace or talk with us about your operation.</p></div><a class="button button--dark" href="demo.html">Explore the demo <span aria-hidden="true">→</span></a></section>
     </main>
-    <footer class="marketing-footer marketing-footer--light"><a class="brand" href="index.html"><img class="brand-mark" src="haulwise-mark.svg" alt="" width="36" height="36"><span class="brand-wordmark">haulwise<small>BUILT FOR THE ROAD</small></span></a><span>Proposed pricing for concept review only.</span><nav aria-label="Footer navigation"><a href="index.html">Home</a><a href="demo.html">Demo</a><a href="account.html#signin">Log in</a></nav></footer>
+    <footer class="marketing-footer marketing-footer--light"><a class="brand" href="index.html"><img class="brand-mark" src="haulwise-mark.svg" alt="" width="36" height="36"><span class="brand-wordmark">haulwise<small>BUILT FOR THE ROAD</small></span></a><span>Secure subscriptions are processed by Stripe.</span><nav aria-label="Footer navigation"><a href="index.html">Home</a><a href="demo.html">Demo</a><a href="account.html#signin">Log in</a></nav></footer>
 </body>
 </html>

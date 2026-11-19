@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Haulwise web app with owner admin, account sync, and secure local record storage.",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node tests/integration.js"
   },
   "engines": {
     "node": ">=20"

@@ -1,6 +1,7 @@
 "use strict";
 
 const path = require("node:path");
+const crypto = require("node:crypto");
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
@@ -45,44 +46,7 @@ app.use((request, response, next) => {
     next();
 });
 
-app.post(
-    "/api/billing/checkout",
-    rateLimit({ windowMs: 60_000, max: 10, standardHeaders: true, legacyHeaders: false }),
-    express.json({ limit: "1kb" }),
-    requireSameOrigin,
-    requireAuthenticatedCustomer,
-    requireSubscriptionProvisioning,
-    async (request, response) => {
-        if (!stripe || !process.env.STRIPE_FLEET_PRICE_ID || !process.env.APP_BASE_URL) {
-            response.status(503).json({ error: "Stripe server configuration is incomplete." });
-            return;
-        }
-        if (request.body.plan !== "fleet") {
-            response.status(400).json({ error: "Choose an available plan." });
-            return;
-        }
-
-        try {
-            const baseUrl = new URL(process.env.APP_BASE_URL).origin;
-            const session = await stripe.checkout.sessions.create({
-                mode: "subscription",
-                line_items: [{ price: process.env.STRIPE_FLEET_PRICE_ID, quantity: 1 }],
-                client_reference_id: String(request.user.id),
-                customer_email: request.user.email,
-                metadata: { userId: String(request.user.id) },
-                subscription_data: { metadata: { userId: String(request.user.id) } },
-                success_url: `${baseUrl}/haulwise/checkout.html?checkout=complete`,
-                cancel_url: `${baseUrl}/haulwise/checkout.html?plan=fleet&checkout=cancelled`
-            });
-            response.json({ url: session.url });
-        } catch (error) {
-            console.error("Stripe Checkout session creation failed:", error.message);
-            response.status(502).json({ error: "Could not create secure checkout. No payment was made." });
-        }
-    }
-);
-
-app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (request, response) => {
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), async (request, response) => {
     if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
         response.status(503).json({ error: "Stripe webhook verification is not configured." });
         return;
@@ -111,9 +75,52 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
     ]);
 
     if (subscriptionEvents.has(event.type)) {
-        response.status(503).json({
-            error: "Subscription persistence is not configured; billing must remain disabled."
-        });
+        try {
+            const db = require("./database").db;
+            let subscription;
+            if (event.type === "checkout.session.completed") {
+                subscription = await stripe.subscriptions.retrieve(event.data.object.subscription);
+            } else if (event.data.object.object === "subscription") {
+                subscription = event.data.object;
+            } else {
+                subscription = null;
+            }
+            if (subscription) {
+                const companyId = subscription.metadata?.companyId
+                    || event.data.object.metadata?.companyId
+                    || event.data.object.client_reference_id
+                    || null;
+                if (companyId) {
+                    db.prepare(`
+                        INSERT INTO subscriptions (
+                            id, company_id, stripe_customer_id, stripe_subscription_id, plan, status,
+                            current_period_end, cancel_at_period_end, updated_at
+                        ) VALUES (?, ?, ?, ?, 'fleet', ?, ?, ?, ?)
+                        ON CONFLICT(stripe_subscription_id) DO UPDATE SET
+                            company_id=excluded.company_id,
+                            stripe_customer_id=excluded.stripe_customer_id,
+                            status=excluded.status,
+                            current_period_end=excluded.current_period_end,
+                            cancel_at_period_end=excluded.cancel_at_period_end,
+                            updated_at=excluded.updated_at
+                    `).run(
+                        crypto.randomUUID(),
+                        companyId,
+                        typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id || "",
+                        subscription.id,
+                        subscription.status,
+                        subscription.current_period_end || null,
+                        subscription.cancel_at_period_end ? 1 : 0,
+                        new Date().toISOString()
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("Stripe webhook persistence failed:", error.message);
+            response.status(500).json({ error: "Could not persist subscription event." });
+            return;
+        }
+        response.sendStatus(200);
         return;
     }
 
@@ -143,18 +150,4 @@ function requireSameOrigin(request, response, next) {
         return;
     }
     next();
-}
-
-function requireAuthenticatedCustomer(request, response, next) {
-    if (!request.user || !request.user.id || !request.user.email) {
-        response.status(503).json({ error: "Secure sign-in is not connected; checkout is disabled." });
-        return;
-    }
-    next();
-}
-
-function requireSubscriptionProvisioning(request, response, next) {
-    response.status(503).json({
-        error: "Subscription activation is not connected; checkout is disabled until verified billing events can be stored."
-    });
 }
