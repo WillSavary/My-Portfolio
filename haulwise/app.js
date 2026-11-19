@@ -40,6 +40,17 @@ let data = readData();
 const statusMessage = document.querySelector("#status-message");
 let currentRouteStart = null;
 let liveLocationWatch = null;
+let routeMap = null;
+let currentLocationMarker = null;
+let currentAccuracyCircle = null;
+let routeOriginMarker = null;
+let routeDestinationMarker = null;
+let routePolyline = null;
+let followCurrentLocation = true;
+let lastNominatimRequestAt = 0;
+
+const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+const OSRM_URL = "https://router.project-osrm.org/route/v1/driving";
 
 if (previousTripsDetected) {
     try {
@@ -172,6 +183,7 @@ function makeFacilityRow(facility) {
     useButton.className = "text-button";
     useButton.textContent = "Use for route";
     useButton.addEventListener("click", () => {
+        clearRoutePreview();
         applyFacility(facility, document.querySelector("#route-destination"), document.querySelector("#route-entry-notes"));
         document.querySelector("#route-facility-select").value = facility.id;
         showRouteStatus(`${facility.name} loaded as the route destination. Confirm the entrance before departure.`, false);
@@ -273,12 +285,14 @@ function showView(view) {
     const heading = document.querySelector(`#view-${view} h2`);
     if (heading) heading.setAttribute("tabindex", "-1"), heading.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (view === "trips") ensureRouteMap();
 }
 
 function openTripRoute(trip) {
     showView("trips");
     stopLiveLocation("");
     currentRouteStart = null;
+    clearRoutePreview();
     document.querySelector("#open-current-map").hidden = true;
     document.querySelector("#route-start").value = trip.originAddress || trip.origin || "";
     document.querySelector("#route-destination").value = trip.address || "";
@@ -406,6 +420,212 @@ function updateCurrentMapLink() {
     mapLink.hidden = false;
 }
 
+function showRouteMapStatus(message, isError) {
+    const status = document.querySelector("#route-map-status");
+    status.textContent = message;
+    status.classList.toggle("is-error", Boolean(isError));
+}
+
+function ensureRouteMap() {
+    if (!window.L) {
+        showRouteMapStatus("The map library did not load. Check your connection and reload this page.", true);
+        return false;
+    }
+    if (!routeMap) {
+        routeMap = L.map("route-map", { preferCanvas: true }).setView([39.5, -98.35], 4);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+        }).addTo(routeMap);
+        routeMap.on("dragstart", () => {
+            followCurrentLocation = false;
+        });
+        routeMap.on("tileerror", () => {
+            showRouteMapStatus("Map tiles could not be loaded. Check your connection or try again later.", true);
+        });
+    }
+    window.setTimeout(() => routeMap.invalidateSize(), 0);
+    if (currentRouteStart) updateMapLocation();
+    return true;
+}
+
+function updateMapLocation() {
+    if (!routeMap || !currentRouteStart) return;
+    const position = [currentRouteStart.latitude, currentRouteStart.longitude];
+    if (!currentLocationMarker) {
+        currentLocationMarker = L.circleMarker(position, {
+            radius: 8,
+            color: "#ffffff",
+            weight: 3,
+            fillColor: "#3578df",
+            fillOpacity: 1
+        }).addTo(routeMap);
+    } else {
+        currentLocationMarker.setLatLng(position);
+    }
+    if (currentRouteStart.accuracy > 0) {
+        if (!currentAccuracyCircle) {
+            currentAccuracyCircle = L.circle(position, {
+                radius: currentRouteStart.accuracy,
+                color: "#3578df",
+                weight: 1,
+                fillColor: "#3578df",
+                fillOpacity: 0.1
+            }).addTo(routeMap);
+        } else {
+            currentAccuracyCircle.setLatLng(position).setRadius(currentRouteStart.accuracy);
+        }
+    } else if (currentAccuracyCircle) {
+        routeMap.removeLayer(currentAccuracyCircle);
+        currentAccuracyCircle = null;
+    }
+    document.querySelector("#recenter-map").disabled = false;
+    if (followCurrentLocation) {
+        routeMap.setView(position, Math.max(routeMap.getZoom(), 15), { animate: false });
+    }
+}
+
+function clearRoutePreview() {
+    if (routeMap) {
+        [routePolyline, routeOriginMarker, routeDestinationMarker].forEach((layer) => {
+            if (layer) routeMap.removeLayer(layer);
+        });
+    }
+    routePolyline = null;
+    routeOriginMarker = null;
+    routeDestinationMarker = null;
+    const googleMapsLink = document.querySelector("#open-google-maps");
+    googleMapsLink.hidden = true;
+    googleMapsLink.removeAttribute("href");
+    showRouteMapStatus("Map tiles are provided by OpenStreetMap contributors.", false);
+}
+
+function setFollowCurrentLocation(follow) {
+    followCurrentLocation = follow;
+    if (follow && currentRouteStart && routeMap) {
+        routeMap.setView(
+            [currentRouteStart.latitude, currentRouteStart.longitude],
+            Math.max(routeMap.getZoom(), 15),
+            { animate: true }
+        );
+    }
+}
+
+async function geocodeAddress(address) {
+    const waitMs = Math.max(0, 1100 - (Date.now() - lastNominatimRequestAt));
+    if (waitMs > 0) await new Promise((resolve) => window.setTimeout(resolve, waitMs));
+    const url = new URL(NOMINATIM_URL);
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("limit", "1");
+    url.searchParams.set("q", address);
+    lastNominatimRequestAt = Date.now();
+
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!response.ok) {
+        throw new Error(`Address lookup failed (HTTP ${response.status}). Try a more complete address.`);
+    }
+    const matches = await response.json();
+    const match = Array.isArray(matches) ? matches[0] : null;
+    if (!match) {
+        throw new Error(`No map location was found for "${address}". Check the address and try again.`);
+    }
+    const latitude = Number(match.lat);
+    const longitude = Number(match.lon);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+        || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+        throw new Error(`The map service returned an invalid location for "${address}". Check the address and try again.`);
+    }
+    return {
+        latitude,
+        longitude,
+        label: typeof match.display_name === "string" ? match.display_name : address
+    };
+}
+
+function formatRouteDuration(seconds) {
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    return hours ? `${hours} hr ${minutes % 60} min` : `${minutes} min`;
+}
+
+async function previewRoute() {
+    const startAddress = document.querySelector("#route-start").value.trim();
+    const destinationAddress = document.querySelector("#route-destination").value.trim();
+    if (!startAddress || !destinationAddress) {
+        showRouteMapStatus("Enter a start point and exact destination address before previewing a route.", true);
+        return;
+    }
+    if (!ensureRouteMap()) return;
+
+    const button = document.querySelector("#preview-route");
+    button.disabled = true;
+    button.textContent = "Finding route…";
+    clearRoutePreview();
+    showRouteMapStatus("Looking up the route with public mapping services…", false);
+    try {
+        const origin = currentRouteStart || await geocodeAddress(startAddress);
+        const destination = await geocodeAddress(destinationAddress);
+        const routeUrl = `${OSRM_URL}/${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`;
+        const response = await fetch(routeUrl, { headers: { Accept: "application/json" } });
+        if (!response.ok) {
+            throw new Error(`Route service failed (HTTP ${response.status}). Try again later.`);
+        }
+        const result = await response.json();
+        const route = result.code === "Ok" && Array.isArray(result.routes) ? result.routes[0] : null;
+        if (!route || !route.geometry || !Array.isArray(route.geometry.coordinates) || route.geometry.coordinates.length === 0) {
+            throw new Error("No road route was found between those points. Check the addresses and try again.");
+        }
+        if (!Number.isFinite(route.distance) || !Number.isFinite(route.duration)) {
+            throw new Error("The route service returned incomplete route details. Try again later.");
+        }
+
+        const routePoints = route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude]);
+        routePolyline = L.polyline(routePoints, {
+            color: "#4e722e",
+            weight: 6,
+            opacity: 0.86,
+            lineCap: "round",
+            lineJoin: "round"
+        }).addTo(routeMap);
+        if (!currentRouteStart) {
+            routeOriginMarker = L.circleMarker([origin.latitude, origin.longitude], {
+                radius: 7,
+                color: "#ffffff",
+                weight: 2,
+                fillColor: "#799747",
+                fillOpacity: 1
+            }).addTo(routeMap);
+        }
+        const destinationPopup = document.createElement("span");
+        destinationPopup.textContent = `Drop-off: ${destinationAddress}`;
+        routeDestinationMarker = L.marker([destination.latitude, destination.longitude])
+            .bindPopup(destinationPopup)
+            .addTo(routeMap);
+        routeMap.fitBounds(routePolyline.getBounds(), { padding: [28, 28] });
+
+        const googleMapsUrl = new URL("https://www.google.com/maps/dir/");
+        googleMapsUrl.searchParams.set("api", "1");
+        googleMapsUrl.searchParams.set("origin", currentRouteStart
+            ? `${origin.latitude},${origin.longitude}`
+            : startAddress);
+        googleMapsUrl.searchParams.set("destination", destinationAddress);
+        googleMapsUrl.searchParams.set("travelmode", "driving");
+        const googleMapsLink = document.querySelector("#open-google-maps");
+        googleMapsLink.href = googleMapsUrl.toString();
+        googleMapsLink.hidden = false;
+        showRouteMapStatus(
+            `Route preview: ${formatNumber(route.distance / 1609.344)} mi · about ${formatRouteDuration(route.duration)}. Estimate only; not truck-certified.`,
+            false
+        );
+    } catch (error) {
+        console.error("Could not preview route:", error);
+        showRouteMapStatus(error instanceof Error ? error.message : "Could not preview this route. Check your connection and try again.", true);
+    } finally {
+        button.disabled = false;
+        button.textContent = "Preview route";
+    }
+}
+
 function stopLiveLocation(message) {
     if (liveLocationWatch !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(liveLocationWatch);
@@ -440,6 +660,8 @@ document.querySelector("#use-current-location").addEventListener("click", () => 
     const locationStatus = document.querySelector("#location-status");
     const routeStart = document.querySelector("#route-start");
     currentRouteStart = null;
+    clearRoutePreview();
+    followCurrentLocation = true;
     updateCurrentMapLink();
     if (routeStart.value.startsWith("Current location (")) routeStart.value = "";
     if (!navigator.geolocation) {
@@ -466,6 +688,7 @@ document.querySelector("#use-current-location").addEventListener("click", () => 
             locationStatus.textContent = `Live GPS · accuracy approx. ±${Math.round(currentRouteStart.accuracy)} m · not saved or sent to Haulwise.`;
             locationStatus.classList.remove("is-error");
             updateCurrentMapLink();
+            updateMapLocation();
         }, displayLocationError, { enableHighAccuracy: true, timeout: 20000, maximumAge: 3000 });
     } catch {
         liveLocationWatch = null;
@@ -483,6 +706,8 @@ document.querySelector("#stop-current-location").addEventListener("click", () =>
 document.querySelector("#route-start").addEventListener("input", () => {
     stopLiveLocation("");
     currentRouteStart = null;
+    clearRoutePreview();
+    document.querySelector("#recenter-map").disabled = true;
     updateCurrentMapLink();
     const locationStatus = document.querySelector("#location-status");
     locationStatus.textContent = "";
@@ -497,6 +722,7 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("pagehide", () => stopLiveLocation(""));
 
 document.querySelector("#route-facility-select").addEventListener("change", (event) => {
+    clearRoutePreview();
     const facility = getFacilityById(event.currentTarget.value);
     if (facility) {
         applyFacility(facility, document.querySelector("#route-destination"), document.querySelector("#route-entry-notes"));
@@ -507,6 +733,7 @@ document.querySelector("#route-facility-select").addEventListener("change", (eve
 });
 
 document.querySelector("#route-destination").addEventListener("input", () => {
+    clearRoutePreview();
     const facilitySelect = document.querySelector("#route-facility-select");
     if (facilitySelect.value) {
         facilitySelect.value = "";
@@ -530,6 +757,8 @@ document.querySelector("#trip-facility-select").addEventListener("change", (even
 document.querySelector("#facility-search").addEventListener("input", renderFacilities);
 document.querySelector("#share-route").addEventListener("click", shareRoute);
 document.querySelector("#copy-route").addEventListener("click", copyRoute);
+document.querySelector("#preview-route").addEventListener("click", previewRoute);
+document.querySelector("#recenter-map").addEventListener("click", () => setFollowCurrentLocation(true));
 document.querySelector("#show-facility-form").addEventListener("click", () => {
     const form = document.querySelector("#facility-form");
     form.reset();

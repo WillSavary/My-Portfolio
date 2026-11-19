@@ -6,8 +6,10 @@
     <meta name="theme-color" content="#101812">
     <meta name="description" content="Free Haulwise trip and mileage tools. Download each trip as a CSV without creating an account or storing a trip log.">
     <title>Haulwise | Free local workspace</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
     <link rel="stylesheet" href="app.css">
     <script src="trip-export.js" defer></script>
+    <script src="vendor/leaflet/leaflet.js" defer></script>
     <script src="app.js" defer></script>
 </head>
 <body>
@@ -102,6 +104,22 @@
                         <label>Exact gate / dock address<input id="route-destination" maxlength="240" placeholder="Verified truck entrance address"></label>
                         <label class="field-wide">Gate or dock instructions (optional)<input id="route-entry-notes" maxlength="180" placeholder="e.g. Gate 3, use west truck entrance"></label>
                     </div>
+                    <section class="route-map-card" aria-labelledby="route-map-heading">
+                       <div class="route-map-toolbar">
+                           <div>
+                               <h3 id="route-map-heading">Live map &amp; route preview</h3>
+                               <p>Start GPS to follow your position, or preview a route between the entered points.</p>
+                           </div>
+                           <div class="route-map-controls">
+                               <button class="button button--lime" type="button" id="preview-route">Preview route</button>
+                               <button class="button button--quiet" type="button" id="recenter-map" disabled>Recenter</button>
+                               <a class="button button--quiet" id="open-google-maps" target="_blank" rel="noopener noreferrer" hidden>Open in Google Maps ↗</a>
+                           </div>
+                       </div>
+                       <div id="route-map" class="route-map" role="region" aria-label="OpenStreetMap showing your current position and route preview"></div>
+                       <p class="route-map-status" id="route-map-status" role="status" aria-live="polite">Map tiles are provided by OpenStreetMap contributors.</p>
+                       <p class="route-map-notice">Map tiles, address lookups, and route previews use public OpenStreetMap, Nominatim, and OSRM services. When you preview a route, your current coordinates or entered addresses are sent to those providers, not Haulwise. Opening Google Maps also sends the route endpoints to Google. Haulwise does not save them. Public services may be limited or unavailable. Routes are not truck-certified; verify restrictions and use a truck-suitable navigation app. Set up navigation before driving and do not interact with this page while driving.</p>
+                    </section>
                     <div class="form-actions route-actions">
                         <button class="button button--lime" type="button" id="share-route">Share with navigation app</button>
                         <button class="button button--quiet" type="button" id="copy-route">Copy route details</button>

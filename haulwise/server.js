@@ -10,20 +10,26 @@ const siteRoot = path.resolve(__dirname, "..");
 
 app.disable("x-powered-by");
 app.use(helmet({
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             baseUri: ["'self'"],
             formAction: ["'self'"],
             frameAncestors: ["'none'"],
-            imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
+            imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://*.tile.openstreetmap.org"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             scriptSrc: ["'self'"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", "https://nominatim.openstreetmap.org", "https://router.project-osrm.org"],
             objectSrc: ["'none'"]
         }
     }
+}));
+
+app.use("/haulwise/vendor/leaflet", express.static(path.join(__dirname, "node_modules", "leaflet", "dist"), {
+    dotfiles: "deny",
+    fallthrough: false
 }));
 
 app.use((request, response, next) => {

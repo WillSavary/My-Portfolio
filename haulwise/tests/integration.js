@@ -101,11 +101,18 @@ async function getFreePort() {
 
         const demo = navigationDocuments.get("/haulwise/demo.html");
         assert.doesNotMatch(demo, /account\.html|sign.?up|log.?in|payroll|team &amp; roles|DOT \/ ELD/i);
+        assert.match(demo, /id="route-map"/);
+        assert.match(demo, /id="preview-route"/);
+        assert.match(demo, /sent to those providers, not Haulwise/);
+        assert.equal((await request("/haulwise/vendor/leaflet/leaflet.js")).status, 200);
+        assert.equal((await request("/haulwise/vendor/leaflet/leaflet.css")).status, 200);
         const appJs = fs.readFileSync(path.resolve(__dirname, "..", "app.js"), "utf8");
         assert.match(appJs, /function downloadTripCsv\(trip\)/);
         assert.match(appJs, /createTripCsv\(trip, data\.truck\)/);
         assert.match(appJs, /data\.trips = \[\]/);
-        assert.doesNotMatch(appJs, /fetch\(|\/api\/|data\.trips\.push/);
+        assert.match(appJs, /nominatim\.openstreetmap\.org/);
+        assert.match(appJs, /router\.project-osrm\.org/);
+        assert.doesNotMatch(appJs, /fetch\(["'`]\/api\/|data\.trips\.push/);
 
         const tripFile = createTripCsv({
             date: "2026-01-15T12:00:00.000Z",

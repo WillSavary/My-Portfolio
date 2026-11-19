@@ -894,6 +894,18 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 }
 .route-map-link { font-size: 9px; }
 .route-location-action button:disabled { cursor: wait; opacity: .7; }
+.route-map-card { margin-top: 18px; padding: 12px; border: 1px solid #e4e9df; border-radius: 10px; background: #fbfcf9; }
+.route-map-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.route-map-toolbar h3 { margin: 0; color: var(--ink); font-size: 13px; }
+.route-map-toolbar p { margin: 4px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.route-map-controls { display: flex; flex-wrap: wrap; gap: 7px; }
+.route-map-controls .button { min-height: 34px; padding: 0 10px; font-size: 9px; }
+.route-map-controls .button:disabled { cursor: not-allowed; opacity: .55; }
+.route-map { width: 100%; height: clamp(280px, 42vw, 460px); z-index: 0; border: 1px solid #dfe5da; border-radius: 8px; background: #e8eee2; }
+.route-map-status { min-height: 14px; margin: 8px 0 0; color: #52664a; font-size: 9px; line-height: 1.5; }
+.route-map-status.is-error { color: #873e2f; }
+.route-map-notice { margin: 5px 0 0; color: #72796f; font-size: 9px; line-height: 1.55; }
+.route-map .leaflet-control-attribution { font-size: 8px; }
 .account-sync-panel { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: -10px 0 18px; border-color: #dfe8d3; background: #fbfcf8; }
 .account-sync-panel .eyebrow { margin: 0 0 4px; }
 .account-sync-panel p:not(.eyebrow) { margin: 0; color: #64705e; font-size: 10px; }
@@ -1034,6 +1046,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     .route-location-action { align-content: start; }
     .route-actions { flex-wrap: wrap; gap: 9px; }
     .route-planner .panel-heading { align-items: flex-start; }
+    .route-map-toolbar { align-items: flex-start; flex-direction: column; }
+    .route-map-controls { width: 100%; }
+    .route-map-controls .button { flex: 1 1 auto; }
+    .route-map { height: 330px; }
     .facility-form { padding: 12px; }
     .facility-row { align-items: flex-start; flex-direction: column; gap: 9px; }
     .facility-actions { flex-wrap: wrap; }
