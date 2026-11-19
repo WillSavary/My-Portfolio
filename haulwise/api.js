@@ -237,8 +237,8 @@ router.post("/admin/bootstrap", setupLimiter, async (request, response) => {
     const username = cleanUsername(request.body.username);
     const email = cleanEmail(request.body.email);
     const password = typeof request.body.password === "string" ? request.body.password : "";
-    if (!username || !email || password.length < 14 || password.length > 256) {
-        response.status(400).json({ error: "Choose a username, valid email, and unique password of at least 14 characters." });
+    if (!username || !email || password.length < 10 || password.length > 256) {
+        response.status(400).json({ error: "Choose a username, valid email, and unique password of at least 10 characters." });
         return;
     }
     const salt = crypto.randomBytes(16).toString("hex");
