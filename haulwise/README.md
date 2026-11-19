@@ -21,8 +21,10 @@ Truck details and saved facilities are kept only in the current browser so they 
 
 The CSV is the user's copy; keep it somewhere safe if it is needed later. Browser download settings may ask where to save each file.
 
-## Route sharing
+## Live map and route preview
 
-The driver can explicitly start foreground GPS tracking on the trip page. Position updates stay in the current page, can be opened as a point in OpenStreetMap, and stop when the driver leaves the trip view, hides the page, or presses Stop. GPS coordinates are not written to the app or database.
+The trip page includes an OpenStreetMap live map. Drivers can explicitly start foreground GPS tracking; the map follows their position and can be recentered. Tracking stops when they leave the trip view, hide the page, or press Stop.
 
-Haulwise shares or copies start and destination details for the driver's chosen navigation app. It does not calculate routes, provide turn-by-turn guidance, geocode addresses, verify truck restrictions, or guarantee dock access. Confirm entrances and truck restrictions with dispatch or the receiver.
+Selecting **Preview route** geocodes typed addresses with Nominatim and requests a driving route from the public OSRM service. Map tiles come from OpenStreetMap. Loading or moving the map can reveal the approximate viewed area to its tile servers; route preview sends the current coordinates or entered addresses to Nominatim and OSRM. Opening Google Maps shares the destination and any typed start point; Google may use the device location. Haulwise does not receive or save these locations. Public services may be limited or unavailable.
+
+The preview is static: it does not reroute as GPS moves, is not truck-certified, and provides no turn-by-turn guidance. Use a truck-suitable navigation app, confirm restrictions and dock access with dispatch or the receiver, set up navigation before driving, and do not interact with this page while driving. The driver can also share or copy route details for a chosen navigation app.

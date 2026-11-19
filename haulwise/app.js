@@ -48,6 +48,7 @@ let routeDestinationMarker = null;
 let routePolyline = null;
 let followCurrentLocation = true;
 let lastNominatimRequestAt = 0;
+let routeInputRevision = 0;
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const OSRM_URL = "https://router.project-osrm.org/route/v1/driving";
@@ -183,7 +184,7 @@ function makeFacilityRow(facility) {
     useButton.className = "text-button";
     useButton.textContent = "Use for route";
     useButton.addEventListener("click", () => {
-        clearRoutePreview();
+        invalidateRoutePreview();
         applyFacility(facility, document.querySelector("#route-destination"), document.querySelector("#route-entry-notes"));
         document.querySelector("#route-facility-select").value = facility.id;
         showRouteStatus(`${facility.name} loaded as the route destination. Confirm the entrance before departure.`, false);
@@ -292,7 +293,7 @@ function openTripRoute(trip) {
     showView("trips");
     stopLiveLocation("");
     currentRouteStart = null;
-    clearRoutePreview();
+    invalidateRoutePreview();
     document.querySelector("#open-current-map").hidden = true;
     document.querySelector("#route-start").value = trip.originAddress || trip.origin || "";
     document.querySelector("#route-destination").value = trip.address || "";
@@ -500,6 +501,11 @@ function clearRoutePreview() {
     showRouteMapStatus("Map tiles are provided by OpenStreetMap contributors.", false);
 }
 
+function invalidateRoutePreview() {
+    routeInputRevision += 1;
+    clearRoutePreview();
+}
+
 function setFollowCurrentLocation(follow) {
     followCurrentLocation = follow;
     if (follow && currentRouteStart && routeMap) {
@@ -558,6 +564,7 @@ async function previewRoute() {
     if (!ensureRouteMap()) return;
 
     const button = document.querySelector("#preview-route");
+    const requestRevision = routeInputRevision;
     button.disabled = true;
     button.textContent = "Finding route…";
     clearRoutePreview();
@@ -577,6 +584,10 @@ async function previewRoute() {
         }
         if (!Number.isFinite(route.distance) || !Number.isFinite(route.duration)) {
             throw new Error("The route service returned incomplete route details. Try again later.");
+        }
+        if (requestRevision !== routeInputRevision) {
+            showRouteMapStatus("Route points changed during lookup. Preview them again.", true);
+            return;
         }
 
         const routePoints = route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude]);
@@ -605,16 +616,14 @@ async function previewRoute() {
 
         const googleMapsUrl = new URL("https://www.google.com/maps/dir/");
         googleMapsUrl.searchParams.set("api", "1");
-        googleMapsUrl.searchParams.set("origin", currentRouteStart
-            ? `${origin.latitude},${origin.longitude}`
-            : startAddress);
+        if (!currentRouteStart) googleMapsUrl.searchParams.set("origin", startAddress);
         googleMapsUrl.searchParams.set("destination", destinationAddress);
         googleMapsUrl.searchParams.set("travelmode", "driving");
         const googleMapsLink = document.querySelector("#open-google-maps");
         googleMapsLink.href = googleMapsUrl.toString();
         googleMapsLink.hidden = false;
         showRouteMapStatus(
-            `Route preview: ${formatNumber(route.distance / 1609.344)} mi · about ${formatRouteDuration(route.duration)}. Estimate only; not truck-certified.`,
+            `Static route preview: ${formatNumber(route.distance / 1609.344)} mi · about ${formatRouteDuration(route.duration)}. It will not reroute and is not truck-certified.`,
             false
         );
     } catch (error) {
@@ -660,7 +669,7 @@ document.querySelector("#use-current-location").addEventListener("click", () => 
     const locationStatus = document.querySelector("#location-status");
     const routeStart = document.querySelector("#route-start");
     currentRouteStart = null;
-    clearRoutePreview();
+    invalidateRoutePreview();
     followCurrentLocation = true;
     updateCurrentMapLink();
     if (routeStart.value.startsWith("Current location (")) routeStart.value = "";
@@ -706,7 +715,7 @@ document.querySelector("#stop-current-location").addEventListener("click", () =>
 document.querySelector("#route-start").addEventListener("input", () => {
     stopLiveLocation("");
     currentRouteStart = null;
-    clearRoutePreview();
+    invalidateRoutePreview();
     document.querySelector("#recenter-map").disabled = true;
     updateCurrentMapLink();
     const locationStatus = document.querySelector("#location-status");
@@ -722,7 +731,7 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("pagehide", () => stopLiveLocation(""));
 
 document.querySelector("#route-facility-select").addEventListener("change", (event) => {
-    clearRoutePreview();
+    invalidateRoutePreview();
     const facility = getFacilityById(event.currentTarget.value);
     if (facility) {
         applyFacility(facility, document.querySelector("#route-destination"), document.querySelector("#route-entry-notes"));
@@ -733,7 +742,7 @@ document.querySelector("#route-facility-select").addEventListener("change", (eve
 });
 
 document.querySelector("#route-destination").addEventListener("input", () => {
-    clearRoutePreview();
+    invalidateRoutePreview();
     const facilitySelect = document.querySelector("#route-facility-select");
     if (facilitySelect.value) {
         facilitySelect.value = "";

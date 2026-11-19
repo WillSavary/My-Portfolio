@@ -103,7 +103,7 @@ async function getFreePort() {
         assert.doesNotMatch(demo, /account\.html|sign.?up|log.?in|payroll|team &amp; roles|DOT \/ ELD/i);
         assert.match(demo, /id="route-map"/);
         assert.match(demo, /id="preview-route"/);
-        assert.match(demo, /sent to those providers, not Haulwise/);
+        assert.match(demo, /not Haulwise/);
         assert.equal((await request("/haulwise/vendor/leaflet/leaflet.js")).status, 200);
         assert.equal((await request("/haulwise/vendor/leaflet/leaflet.css")).status, 200);
         const appJs = fs.readFileSync(path.resolve(__dirname, "..", "app.js"), "utf8");

@@ -73,7 +73,7 @@
                         <div class="panel-heading"><div><p class="eyebrow">ON THE ROAD</p><h2>Plan your next stop</h2></div><span class="route-symbol" aria-hidden="true">↗</span></div>
                         <p class="muted-copy">Set a start point and verified gate or dock, then share both with your truck-navigation app.</p>
                         <button class="button button--dark button--full" type="button" id="open-route-planner">Plan a route <span aria-hidden="true">→</span></button>
-                        <div class="route-warning"><span aria-hidden="true">!</span><p>Your navigation app calculates the route. Confirm truck restrictions, entrance, and dock with dispatch before moving.</p></div>
+                        <div class="route-warning"><span aria-hidden="true">!</span><p>Haulwise previews a car route, not a truck-legal route. Confirm truck restrictions, entrance, and dock with dispatch; use a truck-suitable app for driving directions.</p></div>
                     </article>
                 </div>
 
@@ -118,7 +118,7 @@
                        </div>
                        <div id="route-map" class="route-map" role="region" aria-label="OpenStreetMap showing your current position and route preview"></div>
                        <p class="route-map-status" id="route-map-status" role="status" aria-live="polite">Map tiles are provided by OpenStreetMap contributors.</p>
-                       <p class="route-map-notice">Map tiles, address lookups, and route previews use public OpenStreetMap, Nominatim, and OSRM services. When you preview a route, your current coordinates or entered addresses are sent to those providers, not Haulwise. Opening Google Maps also sends the route endpoints to Google. Haulwise does not save them. Public services may be limited or unavailable. Routes are not truck-certified; verify restrictions and use a truck-suitable navigation app. Set up navigation before driving and do not interact with this page while driving.</p>
+                       <p class="route-map-notice">Map tiles, address lookups, and route previews use public OpenStreetMap, Nominatim, and OSRM services. Loading or moving the map can reveal the approximate map area to OpenStreetMap. Previewing a route sends your current coordinates or entered addresses to Nominatim and OSRM, not Haulwise. Opening Google Maps shares the destination and any typed start point; Google may use your device location. Haulwise does not save them. Public services may be limited or unavailable. The route preview is static, will not reroute as you move, and is not truck-certified. Use a truck-suitable navigation app, set it up before driving, and do not interact with this page while driving.</p>
                     </section>
                     <div class="form-actions route-actions">
                         <button class="button button--lime" type="button" id="share-route">Share with navigation app</button>
@@ -126,7 +126,7 @@
                     </div>
                     <p class="route-status route-status--result" id="route-status" role="status" aria-live="polite"></p>
                     <pre class="route-share-text" id="route-share-text" hidden></pre>
-                    <div class="route-warning"><span aria-hidden="true">!</span><p>Haulwise shares location details; it does not calculate or verify truck-legal roads. Confirm the route, restrictions, entrance, and dock with dispatch or the receiver. Current coordinates are used only for this route and are not saved.</p></div>
+                    <div class="route-warning"><span aria-hidden="true">!</span><p>The preview is for reference only and does not verify truck-legal roads or dock access. Confirm the route, restrictions, entrance, and dock with dispatch or the receiver.</p></div>
                 </section>
 
                 <section class="panel facility-directory" aria-labelledby="facility-heading">
