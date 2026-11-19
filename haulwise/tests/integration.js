@@ -111,6 +111,45 @@ async function getFreePort() {
         const privatePage = await request("/haulwise/api.js");
         assert.equal(privatePage.status, 404);
 
+        const navigationPages = [
+            "/haulwise/",
+            "/haulwise/index.html",
+            "/haulwise/demo.html",
+            "/haulwise/account.html",
+            "/haulwise/subscriptions.html",
+            "/haulwise/checkout.html",
+            "/haulwise/admin-setup.html",
+            "/haulwise/admin.html"
+        ];
+        const navigationDocuments = new Map();
+        for (const page of navigationPages) {
+            const result = await request(page);
+            assert.equal(result.status, 200, `Navigation page is unavailable: ${page}`);
+            navigationDocuments.set(page, result.body);
+        }
+        for (const [page, html] of navigationDocuments) {
+            const links = html.matchAll(/<a\b[^>]*\bhref=(["'])(.*?)\1/gi);
+            for (const [, , href] of links) {
+                const target = new URL(href, `${origin}${page}`);
+                if (!["http:", "https:"].includes(target.protocol) || target.origin !== origin) continue;
+
+                const targetPath = `${target.pathname}${target.search}`;
+                let targetHtml = navigationDocuments.get(target.pathname);
+                if (!targetHtml) {
+                    const targetPage = await request(targetPath);
+                    assert.equal(targetPage.status, 200, `Broken navigation link: ${page} -> ${href}`);
+                    if (typeof targetPage.body === "string") targetHtml = targetPage.body;
+                }
+                if (target.hash && targetHtml) {
+                    const fragment = decodeURIComponent(target.hash.slice(1));
+                    assert.ok(
+                        targetHtml.includes(`id="${fragment}"`) || targetHtml.includes(`id='${fragment}'`),
+                        `Missing navigation target: ${page} -> ${href}`
+                    );
+                }
+            }
+        }
+
         const ownerSetup = await request("/api/admin/bootstrap", {
             method: "POST",
             body: {
@@ -309,7 +348,7 @@ async function getFreePort() {
         const protectedData = await request("/api/account/data", { cookie: userCookie });
         assert.equal(protectedData.status, 401);
 
-        console.log("Account registration, approval, sign-in, and SQLite persistence checks passed.");
+        console.log("Account navigation, registration, approval, sign-in, and SQLite persistence checks passed.");
     } finally {
         await stopServer();
         fs.rmSync(dataDirectory, { recursive: true, force: true });
