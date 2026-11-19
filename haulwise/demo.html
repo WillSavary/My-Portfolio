@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101812">
+    <meta name="description" content="Haulwise helps independent drivers track trips, trucks, and business mileage.">
+    <title>Haulwise | Driver workspace</title>
+    <link rel="stylesheet" href="app.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="Workspace navigation">
+            <a class="brand" href="index.html">
+                <img class="brand-mark" src="haulwise-mark.svg" alt="" width="42" height="42">
+                <span class="brand-wordmark">haulwise<small>DRIVER WORKSPACE</small></span>
+            </a>
+            <p class="side-label">WORKSPACE</p>
+            <nav class="side-nav">
+                <button class="nav-link is-active" type="button" data-view="overview"><span aria-hidden="true">◫</span> Overview</button>
+                <button class="nav-link" type="button" data-view="trips"><span aria-hidden="true">↗</span> Trips &amp; mileage</button>
+                <button class="nav-link" type="button" data-view="fleet"><span aria-hidden="true">▰</span> My truck</button>
+                <button class="nav-link locked-link" type="button" data-locked="Payroll"><span aria-hidden="true">▤</span> Payroll <span class="lock-tag">PRO</span></button>
+                <button class="nav-link locked-link" type="button" data-locked="Team &amp; roles"><span aria-hidden="true">♧</span> Team &amp; roles <span class="lock-tag">PRO</span></button>
+                <button class="nav-link locked-link" type="button" data-locked="Reports"><span aria-hidden="true">▥</span> Reports <span class="lock-tag">PRO</span></button>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="upgrade-card">
+                    <span class="mini-tag">FOR FLEETS</span>
+                    <h2>Bring your whole team on board.</h2>
+                    <p>Manage drivers, payroll, trucks, and trip records in one place.</p>
+                    <a class="button button--lime button--small" href="subscriptions.html">Explore business plan <span aria-hidden="true">→</span></a>
+                </div>
+                <a class="side-account" href="account.html"><span class="avatar">JD</span><span>Jordan Driver<small>Independent driver</small></span><span aria-hidden="true">⌄</span></a>
+            </div>
+        </aside>
+
+        <main class="main-area" id="main">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow" id="today-label">DRIVER WORKSPACE</p>
+                    <h1 id="page-title">Good morning, Jordan <span aria-hidden="true">👋</span></h1>
+                </div>
+                <div class="top-actions">
+                    <a class="text-button" id="account-link" href="account.html">Sign in / create account</a>
+                    <span class="demo-badge" id="demo-mode-badge"><span aria-hidden="true">●</span> Browser demo</span>
+                </div>
+            </header>
+
+            <div class="notice notice--demo" role="note">
+                <span class="notice-icon" aria-hidden="true">i</span>
+                    <p><strong>Keep your trip data under your control.</strong> Entries stay on this device unless you sign in and explicitly sync them. Don’t use this preview for official DOT records or payroll.</p>
+                <button class="notice-close" type="button" aria-label="Dismiss demo notice">×</button>
+            </div>
+                <section class="panel account-sync-panel" id="account-sync-panel" hidden aria-label="Account data sync">
+                    <div><p class="eyebrow">SIGNED-IN WORKSPACE</p><p id="account-sync-status" role="status" aria-live="polite"></p></div>
+                    <div class="account-sync-actions">
+                        <button class="button button--quiet" type="button" id="import-local-data">Import this browser's trips and facilities</button>
+                        <button class="text-button" type="button" id="account-signout">Sign out</button>
+                    </div>
+                </section>
+            <div class="status-message" id="status-message" role="status" aria-live="polite"></div>
+
+            <section class="view-panel" id="view-overview" aria-labelledby="overview-heading">
+                <div class="section-title">
+                    <div><p class="eyebrow">YOUR WEEK AT A GLANCE</p><h2 id="overview-heading">Keep your miles moving.</h2></div>
+                    <button class="button button--dark" type="button" data-view="trips">＋ Log a trip</button>
+                </div>
+                <div class="metric-grid">
+                    <article class="metric-card"><span class="metric-label">MILES THIS MONTH</span><strong id="metric-miles">—</strong><span class="metric-foot"><span class="positive">↗</span> From your logged trips</span><span class="metric-icon metric-icon--lime" aria-hidden="true">↗</span></article>
+                    <article class="metric-card"><span class="metric-label">TRIPS LOGGED</span><strong id="metric-trips">—</strong><span class="metric-foot">Your local trip history</span><span class="metric-icon metric-icon--blue" aria-hidden="true">▤</span></article>
+                    <article class="metric-card"><span class="metric-label">ACTIVE TRUCK</span><strong class="metric-truck" id="metric-truck">—</strong><span class="metric-foot" id="metric-truck-sub">Set up your truck details</span><span class="metric-icon metric-icon--orange" aria-hidden="true">▰</span></article>
+                </div>
+
+                <div class="content-grid">
+                    <article class="panel recent-panel">
+                        <div class="panel-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h2>Latest trips</h2></div><button class="inline-link" type="button" data-view="trips">View trip log <span aria-hidden="true">→</span></button></div>
+                        <div id="recent-trips" class="trip-list"></div>
+                    </article>
+                    <article class="panel route-panel">
+                        <div class="panel-heading"><div><p class="eyebrow">ON THE ROAD</p><h2>Plan your next stop</h2></div><span class="route-symbol" aria-hidden="true">↗</span></div>
+                        <p class="muted-copy">Set a start point and verified gate or dock, then share both with your truck-navigation app.</p>
+                        <button class="button button--dark button--full" type="button" id="open-route-planner">Plan a route <span aria-hidden="true">→</span></button>
+                        <div class="route-warning"><span aria-hidden="true">!</span><p>Your navigation app calculates the route. Confirm truck restrictions, entrance, and dock with dispatch before moving.</p></div>
+                    </article>
+                </div>
+
+                <div class="panel quick-panel">
+                    <div class="panel-heading"><div><p class="eyebrow">YOUR FREE DRIVER TOOLS</p><h2>Everything for your own trip book.</h2></div></div>
+                    <div class="quick-grid">
+                        <div class="quick-item"><span class="quick-icon" aria-hidden="true">↗</span><div><h3>Trip mileage</h3><p>Record odometer readings and calculate miles per trip.</p></div></div>
+                        <div class="quick-item"><span class="quick-icon quick-icon--blue" aria-hidden="true">▰</span><div><h3>Truck details</h3><p>Keep your own truck and unit number close at hand.</p></div></div>
+                        <div class="quick-item"><span class="quick-icon quick-icon--orange" aria-hidden="true">⌖</span><div><h3>Truck route handoff</h3><p>Share a start point and verified gate or dock with your navigation app.</p></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view-panel" id="view-trips" aria-labelledby="trips-heading" hidden>
+                <div class="section-title"><div><p class="eyebrow">PERSONAL TRIP BOOK</p><h2 id="trips-heading">Trips &amp; mileage</h2><p class="muted-copy">Track odometer readings for your own reference.</p></div><button class="button button--dark" type="button" id="show-trip-form">＋ New trip</button></div>
+                <section class="panel route-planner" aria-labelledby="route-planner-heading">
+                    <div class="panel-heading"><div><p class="eyebrow">START TO DROP-OFF</p><h2 id="route-planner-heading">Plan a truck route</h2></div><span class="count-pill">GPS permission is optional</span></div>
+                    <p class="muted-copy">Enter your pickup or turn on foreground GPS to watch your current position. Choose a saved receiver or enter its exact gate or dock address, then share the points with a navigation app you trust.</p>
+                    <div class="route-input-grid">
+                        <label>Start point / pickup<input id="route-start" maxlength="220" placeholder="Street address, city, state or province"></label>
+                        <div class="route-location-action">
+                            <button class="button button--quiet" type="button" id="use-current-location">◎ Start live GPS</button>
+                            <button class="text-button" type="button" id="stop-current-location" hidden>Stop live GPS</button>
+                            <span class="route-status" id="location-status" role="status" aria-live="polite"></span>
+                            <a class="text-button route-map-link" id="open-current-map" target="_blank" rel="noopener noreferrer" hidden>Open current point in OpenStreetMap ↗</a>
+                        </div>
+                        <label>Saved receiver<select id="route-facility-select"><option value="">Enter a new destination</option></select></label>
+                        <label>Exact gate / dock address<input id="route-destination" maxlength="240" placeholder="Verified truck entrance address"></label>
+                        <label class="field-wide">Gate or dock instructions (optional)<input id="route-entry-notes" maxlength="180" placeholder="e.g. Gate 3, use west truck entrance"></label>
+                    </div>
+                    <div class="form-actions route-actions">
+                        <button class="button button--lime" type="button" id="share-route">Share with navigation app</button>
+                        <button class="button button--quiet" type="button" id="copy-route">Copy route details</button>
+                    </div>
+                    <p class="route-status route-status--result" id="route-status" role="status" aria-live="polite"></p>
+                    <pre class="route-share-text" id="route-share-text" hidden></pre>
+                    <div class="route-warning"><span aria-hidden="true">!</span><p>Haulwise shares location details; it does not calculate or verify truck-legal roads. Confirm the route, restrictions, entrance, and dock with dispatch or the receiver. Current coordinates are used only for this route and are not saved.</p></div>
+                </section>
+
+                <section class="panel facility-directory" aria-labelledby="facility-heading">
+                    <div class="panel-heading"><div><p class="eyebrow">YOUR PRIVATE DIRECTORY</p><h2 id="facility-heading">Saved facilities</h2></div><button class="button button--quiet" type="button" id="show-facility-form">＋ Add facility</button></div>
+                    <p class="muted-copy">Keep your own verified receiver entrances and docks for reuse. Entries stay in this browser.</p>
+                    <label class="facility-search-label">Search saved facilities<input id="facility-search" type="search" maxlength="100" placeholder="Search name, address, or gate"></label>
+                    <form class="facility-form" id="facility-form" hidden>
+                        <div class="form-grid">
+                            <label>Facility / receiver name<input name="name" required maxlength="100" placeholder="e.g. Riverside Distribution"></label>
+                            <label>Country<select name="country" required><option value="US">United States</option><option value="CA">Canada</option></select></label>
+                            <label class="field-wide">Exact truck entrance / dock address<input name="address" required maxlength="240" placeholder="Street address, city, state/province, postal code"></label>
+                            <label class="field-wide">Gate / dock instructions<input name="notes" maxlength="180" placeholder="Optional entrance, gate, or dock details"></label>
+                        </div>
+                        <label class="checkbox-line facility-verification"><input name="verified" type="checkbox" required><span>I confirmed this truck entrance with dispatch or the receiver.</span></label>
+                        <div class="form-actions"><button class="button button--lime" type="submit">Save verified facility</button><button class="text-button" type="button" id="cancel-facility-form">Cancel</button></div>
+                    </form>
+                    <div id="saved-facilities" class="facility-list"></div>
+                </section>
+
+                <form class="panel form-panel" id="trip-form" hidden>
+                    <div class="panel-heading"><div><p class="eyebrow">NEW ENTRY</p><h2>Log a trip</h2></div><button class="icon-button" type="button" id="hide-trip-form" aria-label="Close form">×</button></div>
+                    <div class="form-grid">
+                        <label>Company / load for<input name="company" required maxlength="80" placeholder="e.g. Acme Freight"></label>
+                        <label>Trip or load reference<input name="reference" maxlength="40" placeholder="e.g. Load 4821"></label>
+                        <label>Pickup / starting area<input name="origin" required maxlength="120" placeholder="City, state or facility"></label>
+                        <label>Pickup street address<input name="originAddress" required maxlength="220" placeholder="Street address, city, state/province, postal code"></label>
+                        <label class="field-wide">Use a saved receiver<select id="trip-facility-select"><option value="">Enter a new destination</option></select></label>
+                        <label>Delivery facility<input name="destination" required maxlength="120" placeholder="Facility name and city"></label>
+                        <label class="field-wide">Exact truck entrance / dock address<input name="address" required maxlength="240" placeholder="Street address, city, state/province, postal code"></label>
+                        <label class="field-wide">Gate or dock instructions<input name="entry" maxlength="180" placeholder="e.g. Gate 3, use west truck entrance"></label>
+                        <label>Start odometer (mi)<input name="start" type="number" min="0" step="0.1" required placeholder="e.g. 248120"></label>
+                        <label>End odometer (mi)<input name="end" type="number" min="0" step="0.1" required placeholder="e.g. 248540"></label>
+                    </div>
+                    <p class="form-hint">Trip miles are calculated from the ending and starting odometer readings.</p>
+                    <div class="form-actions"><button class="button button--lime" type="submit">Save trip</button><button class="text-button" type="button" id="cancel-trip">Cancel</button></div>
+                </form>
+                <article class="panel log-panel"><div class="panel-heading"><div><p class="eyebrow">YOUR RECORDS</p><h2>Trip log</h2></div><span class="count-pill" id="trip-count">0 trips</span></div><div id="all-trips" class="trip-list trip-list--full"></div></article>
+            </section>
+
+            <section class="view-panel" id="view-fleet" aria-labelledby="fleet-heading" hidden>
+                <div class="section-title"><div><p class="eyebrow">PERSONAL VEHICLE</p><h2 id="fleet-heading">My truck</h2><p class="muted-copy">Keep basic truck details for your own trip book.</p></div></div>
+                <form class="panel form-panel fleet-form" id="truck-form">
+                    <div class="panel-heading"><div><p class="eyebrow">TRUCK DETAILS</p><h2>Your active truck</h2></div><span class="count-pill">FREE</span></div>
+                    <div class="form-grid">
+                        <label>Truck name / make<input name="name" required maxlength="60" placeholder="e.g. 2022 Freightliner Cascadia"></label>
+                        <label>Unit number<input name="unit" maxlength="30" placeholder="e.g. 104"></label>
+                        <label>License plate (optional)<input name="plate" maxlength="20" placeholder="State and plate"></label>
+                    </div>
+                    <div class="form-actions"><button class="button button--lime" type="submit">Save truck</button></div>
+                </form>
+                <article class="panel business-lock">
+                    <span class="lock-illustration" aria-hidden="true">▣</span>
+                    <div><p class="eyebrow">BUSINESS PLAN</p><h2>Managing a fleet?</h2><p>Company-owned vehicle lists, assignment history, maintenance workflows, and team access are business features—not part of the free driver workspace.</p>                    <a class="inline-link" href="subscriptions.html">See business plans <span aria-hidden="true">→</span></a></div>
+                </article>
+            </section>
+
+            <footer class="app-footer"><span>Haulwise · Driver demo</span><span>Not a carrier dispatch or ELD service</span><a href="../work.html">Portfolio</a></footer>
+        </main>
+    </div>
+</body>
+</html>

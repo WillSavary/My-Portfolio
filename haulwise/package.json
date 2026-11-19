@@ -1,0 +1,23 @@
+{
+  "name": "haulwise-demo-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Haulwise web app with owner admin, account sync, and secure local record storage.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "stripe": "^18.5.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
+  }
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f5f6f2">
+    <title>Owner console | Haulwise</title>
+    <link rel="stylesheet" href="app.css">
+    <script src="admin.js" defer></script>
+</head>
+<body class="standalone-page admin-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="standalone-header">
+        <a class="brand" href="index.html"><img class="brand-mark" src="haulwise-mark.svg" alt="" width="42" height="42"><span class="brand-wordmark">haulwise<small>OWNER CONSOLE</small></span></a>
+        <span class="admin-private-label">Private owner access</span>
+    </header>
+    <main class="admin-wrap" id="main">
+        <section class="account-card admin-login" id="admin-login">
+            <p class="eyebrow">HAULWISE OWNER</p>
+            <h1>Sign in to the owner console.</h1>
+            <p class="muted-copy">This page is not linked from the public site. Access to records is still enforced by the server, not by the page URL.</p>
+            <form class="account-form" id="admin-login-form">
+                <label>Owner username or email<input name="identifier" autocomplete="username" required maxlength="254"></label>
+                <label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="256"></label>
+                <button class="button button--dark button--full" type="submit">Owner sign in</button>
+            </form>
+            <p class="account-message" id="admin-login-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section id="admin-dashboard" hidden>
+            <div class="admin-heading">
+                <div><p class="eyebrow">OWNER ONLY</p><h1>Company operations</h1><p class="muted-copy">Review users, companies, trucks, trips, facilities, and limited operational audit events.</p></div>
+                <button class="button button--quiet" id="admin-signout" type="button">Sign out</button>
+            </div>
+            <p class="account-message" id="admin-message" role="status" aria-live="polite"></p>
+            <div class="admin-metrics" id="admin-metrics"></div>
+            <section class="panel admin-create-company">
+                <div class="panel-heading"><div><p class="eyebrow">COMPANY ACCESS</p><h2>Create a carrier workspace</h2></div></div>
+                <form id="admin-company-form" class="admin-company-form">
+                    <label>Company name<input name="name" maxlength="100" required></label>
+                    <button class="button button--lime" type="submit">Create company</button>
+                </form>
+                <p class="form-note">The generated driver invite appears once. Share it privately with the company; Haulwise stores only its hash.</p>
+                <output id="admin-invite-output" class="admin-invite" hidden></output>
+            </section>
+            <section class="panel admin-records">
+                <div class="panel-heading"><div><p class="eyebrow">SERVER RECORDS</p><h2 id="records-heading">Users</h2></div><span class="count-pill" id="record-count"></span></div>
+                <nav class="admin-record-tabs" id="record-tabs" aria-label="Record type">
+                    <button type="button" data-kind="users" class="is-active">Users</button>
+                    <button type="button" data-kind="companies">Companies</button>
+                    <button type="button" data-kind="trucks">Trucks</button>
+                    <button type="button" data-kind="trips">Trips / shipments</button>
+                    <button type="button" data-kind="facilities">Facilities</button>
+                    <button type="button" data-kind="activity">Audit events</button>
+                </nav>
+                <div class="admin-table-wrap"><table class="admin-table"><thead id="records-head"></thead><tbody id="records-body"></tbody></table></div>
+                <div class="admin-pagination"><button id="records-prev" class="button button--quiet" type="button">Previous</button><span id="records-page"></span><button id="records-next" class="button button--quiet" type="button">Next</button></div>
+            </section>
+            <p class="feature-note"><strong>Privacy:</strong> audit events cover account and record changes only. Passwords, setup tokens, payment details, GPS traces, and page contents are never shown or recorded here. GPS coordinates are not synced.</p>
+        </section>
+    </main>
+    <footer class="standalone-footer">Haulwise owner console · <a href="index.html">Return to Haulwise</a></footer>
+</body>
+</html>

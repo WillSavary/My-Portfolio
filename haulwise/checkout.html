@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f6f2">
+    <meta name="description" content="Haulwise business plan checkout preview.">
+    <title>Business plans | Haulwise</title>
+    <link rel="stylesheet" href="app.css">
+    <script src="checkout.js" defer></script>
+</head>
+<body class="standalone-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="standalone-header">
+        <a class="brand" href="index.html"><img class="brand-mark" src="haulwise-mark.svg" alt="" width="42" height="42"><span class="brand-wordmark">haulwise<small>BUILT FOR THE ROAD</small></span></a>
+        <a href="subscriptions.html">← Back to plans</a>
+    </header>
+    <main class="standalone-wrap" id="main">
+        <div class="checkout-layout">
+            <div>
+                <div class="standalone-heading">
+                    <p class="eyebrow">HAULWISE FOR BUSINESS</p>
+                    <h1>One place for your whole operation.</h1>
+                    <p>Review the plan you’re interested in. This preview does not accept payment or start a subscription.</p>
+                </div>
+                <section class="checkout-card">
+                    <h2>Select a plan</h2>
+                    <label class="plan-option">
+                        <input type="radio" name="plan" value="driver">
+                        <span><strong>Driver</strong><span>Personal trip and mileage log, truck details, and delivery address shortcuts.</span></span>
+                        <span class="plan-price">$0</span>
+                    </label>
+                    <label class="plan-option plan-option--spaced">
+                        <input type="radio" name="plan" value="fleet" checked>
+                        <span><strong>Fleet</strong><span>Team management, shared truck and trip records, reports, and payroll tools.</span></span>
+                        <span class="plan-price">$49 / mo*</span>
+                    </label>
+                    <div class="checkout-locked">
+                        <strong>This is a plan preview, not a live checkout.</strong>
+                        <p>Stripe is scaffolded but checkout is disabled until secure sign-in and subscription activation are implemented. No payment details are requested and no charge can be made. The Fleet price is illustrative.</p>
+                        <a class="text-button" id="checkout-next" href="../contact.html">Ask about Fleet →</a>
+                    </div>
+                    <p class="checkout-message" id="checkout-message" role="status" aria-live="polite"></p>
+                    <p class="secure-note">Company verification is required before business management features can be enabled. No account or payment information is collected here.</p>
+                </section>
+            </div>
+            <aside class="checkout-card checkout-summary" aria-label="Order summary">
+                <p class="eyebrow">ORDER SUMMARY</p>
+                <h2 id="summary-title">Fleet plan</h2>
+                <div class="summary-row"><span>Plan</span><strong id="summary-plan">Fleet</strong></div>
+                <div class="summary-row"><span>Billing</span><strong id="summary-billing">Monthly</strong></div>
+                <div class="summary-total"><span>Proposed price</span><strong id="summary-price">$49 / mo*</strong></div>
+                <p class="secure-note">Illustrative pricing only. No subscription will be started and no payment will be taken.</p>
+            </aside>
+        </div>
+    </main>
+    <footer class="standalone-footer">No payment is processed on this demo page. <a href="subscriptions.html">Compare plans</a> · <a href="index.html">Return to Haulwise</a></footer>
+</body>
+</html>
